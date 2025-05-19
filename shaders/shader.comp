@@ -1,0 +1,40 @@
+#version 450
+
+layout (binding = 0) uniform ParameterUBO {
+    float deltaTime;
+} ubo;
+
+struct Particle {
+    vec3 position;
+    vec4 color;
+    vec3 velocity;
+    vec3 startPosition;
+};
+
+layout(std140, binding = 1) readonly buffer ParticleSSBOIn {
+   Particle particlesIn[ ];
+};
+
+layout(std140, binding = 2) buffer ParticleSSBOOut {
+   Particle particlesOut[ ];
+};
+
+layout (local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+void main() {
+    uint index  = gl_GlobalInvocationID.x;
+
+    Particle particleIn = particlesIn[index];
+
+    particlesOut[index].position = particleIn.position + particleIn.velocity * ubo.deltaTime;
+    particlesOut[index].velocity = particleIn.velocity;
+
+    float newAlpha = max(particleIn.color.a - (0.1 * ubo.deltaTime), 0.0);
+    
+    if(newAlpha == 0){
+        newAlpha = 0.05;
+        particlesOut[index].position = particleIn.startPosition;
+    }
+
+    particlesOut[index].color = vec4(particleIn.color.rgb, newAlpha);
+}
