@@ -2,6 +2,7 @@
 #include "bufferManager.hpp"
 #include "descriptorManager.hpp"
 #include <iostream>
+#include "mesh.hpp"
 
 Square::Square(Renderer &renderer, int *nextRenderingId, glm::vec3 position, std::array<glm::vec2, 2> verticesOffsets, glm::vec3 color, std::string texture)
     : UI(renderer, nextRenderingId, position), verticesOffsets(verticesOffsets), color(color)

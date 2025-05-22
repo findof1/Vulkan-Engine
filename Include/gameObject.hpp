@@ -29,10 +29,4 @@ public:
   void setPosition(const glm::vec3 &newPosition);
 
   void cleanupMeshes(VkDevice device, Renderer &renderer);
-
-private:
-  std::vector<Vertex> vertices;
-  std::vector<uint32_t> indices;
-
-  bool initializedPhysics = false;
 };

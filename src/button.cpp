@@ -2,6 +2,7 @@
 #include "bufferManager.hpp"
 #include "descriptorManager.hpp"
 #include <iostream>
+#include "mesh.hpp"
 
 Button::Button(Renderer &renderer, int *nextRenderingId, const std::string &label, glm::vec3 position, std::array<glm::vec2, 2> verticesOffsets, std::string texture)
     : UI(renderer, nextRenderingId, position), label(label), verticesOffsets(verticesOffsets)

@@ -3,7 +3,6 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include "gameObject.hpp"
 
 const float YAW = -90.0f;
 const float PITCH = 0.0f;
@@ -39,6 +38,16 @@ public:
   void move(const glm::vec3 &offset)
   {
     Position += offset;
+  }
+
+  void moveForwards(float amount)
+  {
+    Position += Front * amount;
+  }
+
+  void moveRight(float amount)
+  {
+    Position += Right * amount;
   }
 
   void rotate(float yawOffset, float pitchOffset, bool constrainPitch = true)

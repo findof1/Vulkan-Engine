@@ -19,40 +19,42 @@
 #include "engine.hpp"
 #include "primitives.hpp"
 
+Engine engine;
 void start()
 {
 }
 
-void update(float deltaTime)
+void update(float dt)
 {
 }
 
 int main()
 {
-    Engine engine;
     try
     {
-        engine.init(start, update);
-        engine.enableCursor();
-
+        engine.init("Game Engine", start, update);
+        engine.useFreeCamMode(true);
         MaterialData ground;
         ground.diffuseColor = {0.5, 0.5, 0.5};
         ground.hasTexture = 1;
 
-        engine.addGameObject("ground", glm::vec3(0, -10, 0), glm::vec3(100, 5, 100), glm::vec3(0, 0, 0), ground, "textures/wood.png", cubeVerticesNoNormals, cubeIndices);
+        // engine.addGameObject("ground", glm::vec3(0, -10, 0), glm::vec3(100, 5, 100), glm::vec3(0, 0, 0), ground, "textures/wood.png", cubeVerticesNoNormals, cubeIndices);
 
-        engine.addTextElement("titleText", glm::vec3(10.0f, 500.0f, 0.0f), "Hello, UI!");
+        Entity object1 = engine.createEmptyGameObject("object");
+        engine.addMeshComponent(object1, ground, "textures/wood.png", cubeVerticesNoNormals, cubeIndices);
+
+        engine.addTextElement("titleText", glm::vec3(10.0f, -100.0f, 0.0f), "Hello, UI!");
 
         engine.addSquareElement(
             "square",
             glm::vec3(200.0f, -200.0f, -0.5f),
             glm::vec3(0.1f, 0.1f, 0.1f),
-            {glm::vec2(-100.0f, -100.0f), glm::vec2(200.0f, 150.0f)},
+            {glm::vec2(-100.0f, -300.0f), glm::vec2(200.0f, 150.0f)},
             "textures/awesomeface.png");
 
         engine.addButtonElement(
             "button",
-            glm::vec3(200.0f, -500.0f, -0.5f),
+            glm::vec3(200.0f, -700.0f, -0.5f),
             "Button",
             {glm::vec2(-100.0f, -100.0f), glm::vec2(150.0f, 50.0f)},
             glm::vec3(0.2f, 0.6f, 0.9f),

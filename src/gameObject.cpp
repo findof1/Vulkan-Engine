@@ -31,18 +31,10 @@ void GameObject::draw(Renderer *renderer, int currentFrame, glm::mat4 view, glm:
 
 void GameObject::addMesh(Renderer &renderer, int *nextRenderingId, MaterialData &material, std::string texturePath, const std::vector<Vertex> &meshVertices, const std::vector<uint32_t> &meshIndices)
 {
-  if (initializedPhysics)
-  {
-    std::cerr << "Cannot call addMesh() after initializing physics" << std::endl;
-  }
-
   if (texturePath.empty())
   {
     texturePath = "models/couch/diffuse.png";
   }
-
-  vertices.insert(vertices.end(), meshVertices.begin(), meshVertices.end());
-  indices.insert(indices.end(), meshIndices.begin(), meshIndices.end());
 
   Mesh mesh(renderer, nextRenderingId, material, meshVertices, meshIndices);
   mesh.initGraphics(renderer, texturePath);
@@ -113,8 +105,6 @@ void GameObject::loadModel(Renderer &renderer, int *nextRenderingId, const std::
 
       meshVertices.push_back(vertex);
       meshIndices.push_back(static_cast<uint32_t>(meshIndices.size()));
-      vertices.push_back(vertex);
-      indices.push_back(static_cast<uint32_t>(indices.size()));
     }
     MaterialData material;
     material.diffuseColor = {0.5f, 0.5f, 0.5f};

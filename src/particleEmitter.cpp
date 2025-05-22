@@ -8,6 +8,7 @@
 #include <glm/gtc/quaternion.hpp>
 #include <random>
 #include <algorithm>
+#include "mesh.hpp"
 
 ParticleEmitter::ParticleEmitter(Renderer &renderer, int *nextRenderingId, int particleCount, glm::vec3 pos, glm::quat rotation, std::string texturePath) : textureManager(renderer.bufferManager, renderer), particles(particleCount), pos(pos), rotation(rotation)
 {

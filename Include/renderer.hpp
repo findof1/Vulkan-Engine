@@ -14,8 +14,8 @@
 #include "descriptorManager.hpp"
 #include "pipelineManager.hpp"
 #include "camera.h"
-#include "gameObject.hpp"
 #include "bufferManager.hpp"
+#include "mesh.hpp"
 #include "vertex.h"
 #include <ft2build.h>
 #include <functional>

@@ -2,6 +2,7 @@
 #include "UI.hpp"
 #include "particleEmitter.hpp"
 #include "debugDrawer.hpp"
+#include <glm/glm.hpp>
 
 void setupViewportScissor(Renderer *renderer, VkCommandBuffer commandBuffer)
 {
@@ -114,16 +115,42 @@ void disableDepthWrite(Renderer *renderer, VkCommandBuffer commandBuffer)
   }
 }
 
-RenderCommand makeGameObjectCommand(GameObject *obj, Renderer *renderer, int currentFrame, glm::mat4 view, glm::mat4 proj)
+RenderCommand makeGameObjectCommand(ECSRegistry &registry, Entity e, Renderer *renderer, int currentFrame, glm::mat4 view, glm::mat4 proj)
 {
   return {
-      [=](VkCommandBuffer cmdBuf)
+      [&registry, renderer, e, currentFrame, view, proj](VkCommandBuffer cmdBuf)
       {
         vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, renderer->pipelineManager.graphicsPipeline);
         setTriangleTopology(renderer, cmdBuf);
         enableDepthWrite(renderer, cmdBuf);
         setupViewportScissor(renderer, cmdBuf);
-        obj->draw(renderer, currentFrame, view, proj, cmdBuf);
+
+        auto meshIt = registry.meshes.find(e);
+        if (meshIt == registry.meshes.end() || meshIt->second.hide)
+          return;
+
+        MeshComponent &meshComp = registry.meshes.at(e);
+
+        if (meshComp.hide)
+          return;
+
+        auto transformIt = registry.transforms.find(e);
+        glm::mat4 transformation(1.0f);
+        if (transformIt != registry.transforms.end())
+        {
+          const TransformComponent &transform = transformIt->second;
+
+          transformation = glm::translate(transformation, transform.position);
+          transformation = glm::rotate(transformation, glm::radians(transform.rotationZYX.x), glm::vec3(0.0f, 0.0f, 1.0f));
+          transformation = glm::rotate(transformation, glm::radians(transform.rotationZYX.y), glm::vec3(0.0f, 1.0f, 0.0f));
+          transformation = glm::rotate(transformation, glm::radians(transform.rotationZYX.z), glm::vec3(1.0f, 0.0f, 0.0f));
+          transformation = glm::scale(transformation, transform.scale);
+        }
+
+        for (auto &mesh : meshComp.meshes)
+        {
+          mesh.draw(renderer, currentFrame, transformation, view, proj, cmdBuf);
+        }
       }};
 }
 
