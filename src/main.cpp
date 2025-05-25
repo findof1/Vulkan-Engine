@@ -19,7 +19,6 @@
 #include "engine.hpp"
 #include "primitives.hpp"
 
-Engine engine;
 void start()
 {
 }
@@ -30,10 +29,12 @@ void update(float dt)
 
 int main()
 {
+    Engine engine;
     try
     {
         engine.init("Game Engine", start, update);
         engine.useFreeCamMode(true);
+        engine.enableDebug();
         MaterialData ground;
         ground.diffuseColor = {0.5, 0.5, 0.5};
         ground.hasTexture = 1;
@@ -42,26 +43,63 @@ int main()
 
         Entity object1 = engine.createEmptyGameObject("object");
         engine.addMeshComponent(object1, ground, "textures/wood.png", cubeVerticesNoNormals, cubeIndices);
+        TransformComponent &transform = engine.getTransformComponent(object1);
+        transform.scale = glm::vec3(100, 5, 100);
+        transform.position = glm::vec3(0, -10, 0);
+        engine.addBoxColliderComponent(object1);
+
+        Entity object2 = engine.createEmptyGameObject("cube");
+        engine.addMeshComponent(object2, ground, "textures/wood.png", cubeVerticesNoNormals, cubeIndices);
+        TransformComponent &transform2 = engine.getTransformComponent(object2);
+        transform2.scale = glm::vec3(1, 1, 1);
+        transform2.position = glm::vec3(0, 0, 0);
+        engine.addBoxColliderComponent(object2);
+
+        Entity object3 = engine.createEmptyGameObject("cube2");
+        engine.addMeshComponent(object3, ground, "textures/wood.png", cubeVerticesNoNormals, cubeIndices);
+        TransformComponent &transform3 = engine.getTransformComponent(object3);
+        transform3.scale = glm::vec3(1, 1, 1);
+        transform3.position = glm::vec3(5.5f, 0.5f, 0);
+        engine.addBoxColliderComponent(object3);
 
         engine.addTextElement("titleText", glm::vec3(10.0f, -100.0f, 0.0f), "Hello, UI!");
 
         engine.addSquareElement(
             "square",
-            glm::vec3(200.0f, -200.0f, -0.5f),
-            glm::vec3(0.1f, 0.1f, 0.1f),
-            {glm::vec2(-100.0f, -300.0f), glm::vec2(200.0f, 150.0f)},
+            glm::vec3(300.0f, -100.0f, -0.5f),
+            glm::vec3(1.0f, 1.0f, 1.0f),
+            {glm::vec2(-50.0f, -50.0f), glm::vec2(50.0f, 50.0f)},
             "textures/awesomeface.png");
 
         engine.addButtonElement(
-            "button",
-            glm::vec3(200.0f, -700.0f, -0.5f),
-            "Button",
-            {glm::vec2(-100.0f, -100.0f), glm::vec2(150.0f, 50.0f)},
-            glm::vec3(0.2f, 0.6f, 0.9f),
-            glm::vec3(0.3f, 0.7f, 1.0f),
-            glm::vec3(0.1f, 0.3f, 0.7f),
-            "textures/concrete.png");
+            "button1",
+            glm::vec3(200.0f, -900.0f, -0.5f),
+            "Increase Size",
+            {glm::vec2(-20.0f, -100.0f), glm::vec2(350.0f, 100.0f)},
+            glm::vec3(0.0f, 0.7f, 0.0f),
+            glm::vec3(0.1f, 0.9f, 0.0f),
+            glm::vec3(0.1f, 1.0f, 0.2f),
+            "textures/concrete.png",
+            [&engine, object1]()
+            {
+                auto &transform = engine.getTransformComponent(object1);
+                transform.scale = transform.scale * 1.2f;
+            });
 
+        engine.addButtonElement(
+            "button2",
+            glm::vec3(600.0f, -900.0f, -0.5f),
+            "Decrease Size",
+            {glm::vec2(-20.0f, -100.0f), glm::vec2(350.0f, 100.0f)},
+            glm::vec3(0.7f, 0.0f, 0.0f),
+            glm::vec3(0.9f, 0.1f, 0.0f),
+            glm::vec3(1.0f, 0.2f, 0.2f),
+            "textures/concrete.png",
+            [&engine, object1]()
+            {
+                auto &transform = engine.getTransformComponent(object1);
+                transform.scale = transform.scale / 1.2f;
+            });
         engine.run();
         engine.shutdown();
     }

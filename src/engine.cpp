@@ -82,11 +82,25 @@ void Engine::run()
       }
     }
 
-    if (renderer.debugDrawer)
+    for (auto &box : registry.boxColliders)
     {
-      renderer.debugDrawer->clearLines();
+      if (!box.second.autoUpdate)
+      {
+        continue;
+      }
+      const TransformComponent &transform = getConstTransformComponent(box.first);
+      if (transform.justUpdated)
+      {
+        box.second.updateWorldAABB(transform.position, transform.rotationZYX, transform.scale);
+        transformComponentDisableJustUpdated(box.first);
+      }
     }
-    // physics stuff goes here
+
+    if (physics.debugDrawer)
+    {
+      physics.debugDrawer->clearLines();
+    }
+    physics.update(deltaTime);
     render();
 
     glfwPollEvents();
@@ -98,7 +112,10 @@ void Engine::clearHierarchy()
 {
   vkQueueWaitIdle(renderer.graphicsQueue);
 
-  // make sure to add revmoving all entities
+  registry.meshes.clear();
+  registry.transforms.clear();
+  registry.boxColliders.clear();
+  registry.resetNextEntity();
 
   for (auto &[_, element] : UIElements)
   {
@@ -163,16 +180,15 @@ void Engine::render()
       renderer.renderQueue.push_back(makeParticleCommand(&emitter, &renderer, renderer.getCurrentFrame(), view, proj));
   }
 
-  if (renderer.debugDrawer)
-    renderer.renderQueue.push_back(makeDebugCommand(renderer.debugDrawer, &renderer, renderer.debugDrawer->debugLines, view, proj, renderer.getCurrentFrame()));
+  if (physics.debugDrawer)
+    renderer.renderQueue.push_back(makeDebugCommand(physics.debugDrawer, &renderer, physics.debugDrawer->debugLines, view, proj, renderer.getCurrentFrame()));
 
   renderer.drawFrame();
 }
 
 void Engine::enableDebug()
 {
-  VulkanDebugDrawer debugDrawer(renderer, nextRenderingId, true);
-  renderer.debugDrawer = &debugDrawer;
+  physics.debugDrawer = new VulkanDebugDrawer(renderer, nextRenderingId, true);
 }
 
 void Engine::updateFreeCam(float dt)
@@ -391,6 +407,17 @@ void Engine::removeMeshComponent(Entity entity)
   }
 }
 
+TransformComponent &Engine::getTransformComponent(Entity entity)
+{
+  registry.transforms[entity].justUpdated = true;
+  return registry.transforms[entity];
+}
+
+const TransformComponent &Engine::getConstTransformComponent(Entity entity)
+{
+  return registry.transforms[entity];
+}
+
 void Engine::addTransformComponent(Entity entity, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale)
 {
   if (registry.transforms.find(entity) != registry.transforms.end())
@@ -400,6 +427,26 @@ void Engine::addTransformComponent(Entity entity, glm::vec3 position, glm::vec3 
   transformComp.position = position;
   transformComp.rotationZYX = rotation;
   transformComp.scale = scale;
+}
+
+void Engine::addBoxColliderComponent(Entity entity, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale)
+{
+  if (registry.boxColliders.find(entity) != registry.boxColliders.end())
+    return;
+
+  BoxColliderComponent &boxCollider = registry.boxColliders[entity];
+  boxCollider.updateWorldAABB(position, rotation, scale);
+}
+
+void Engine::addBoxColliderComponent(Entity entity)
+{
+  if (registry.boxColliders.find(entity) != registry.boxColliders.end())
+    return;
+
+  BoxColliderComponent &boxCollider = registry.boxColliders[entity];
+  TransformComponent &transform = getTransformComponent(entity);
+  boxCollider.updateWorldAABB(transform.position, transform.rotationZYX, transform.scale);
+  boxCollider.autoUpdate = true;
 }
 
 Entity Engine::createEmptyGameObject(std::string name)

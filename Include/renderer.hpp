@@ -28,7 +28,6 @@ class DescriptorManager;
 class PipelineManager;
 class DeviceManager;
 struct Vertex;
-class VulkanDebugDrawer;
 class GameObject;
 class ParticleEmitter;
 class UI;
@@ -83,8 +82,6 @@ public:
   DescriptorManager descriptorManager;
   PipelineManager pipelineManager;
   DeviceManager deviceManager;
-
-  VulkanDebugDrawer *debugDrawer = nullptr;
 
   VkCommandPool commandPool;
   std::vector<VkCommandBuffer> commandBuffers;

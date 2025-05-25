@@ -3,7 +3,6 @@
 #include "renderer.hpp"
 #include "utils.h"
 #include <cstring>
-#include "debugDrawer.hpp"
 #include "text.hpp"
 #include "particleEmitter.hpp"
 

@@ -1,5 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include "mesh.hpp"
 
 struct TransformComponent
@@ -7,10 +8,60 @@ struct TransformComponent
   glm::vec3 position;
   glm::vec3 rotationZYX;
   glm::vec3 scale = glm::vec3(1.0f);
+  bool justUpdated = true;
 };
 
 struct MeshComponent
 {
   bool hide = false;
   std::vector<Mesh> meshes;
+};
+
+struct BoxColliderComponent
+{
+  glm::vec3 localMin = glm::vec3(-0.5f);
+  glm::vec3 localMax = glm::vec3(0.5f);
+
+  glm::vec3 worldMin;
+  glm::vec3 worldMax;
+
+  bool active = true;
+  bool autoUpdate = false;
+
+  void updateWorldAABB(const glm::vec3 &position, const glm::vec3 &rotationZYX, const glm::vec3 &scale)
+  {
+    glm::quat rotation = glm::quat(glm::radians(rotationZYX));
+
+    glm::vec3 scaledMin = localMin * (scale + 0.1f);
+    glm::vec3 scaledMax = localMax * (scale + 0.1f);
+
+    glm::vec3 corners[8] = {
+        glm::vec3(scaledMin.x, scaledMin.y, scaledMin.z),
+        glm::vec3(scaledMax.x, scaledMin.y, scaledMin.z),
+        glm::vec3(scaledMin.x, scaledMax.y, scaledMin.z),
+        glm::vec3(scaledMax.x, scaledMax.y, scaledMin.z),
+        glm::vec3(scaledMin.x, scaledMin.y, scaledMax.z),
+        glm::vec3(scaledMax.x, scaledMin.y, scaledMax.z),
+        glm::vec3(scaledMin.x, scaledMax.y, scaledMax.z),
+        glm::vec3(scaledMax.x, scaledMax.y, scaledMax.z)};
+
+    worldMin = glm::vec3(FLT_MAX);
+    worldMax = glm::vec3(-FLT_MAX);
+
+    for (const auto &corner : corners)
+    {
+      glm::vec3 rotatedCorner = rotation * corner;
+      glm::vec3 worldCorner = rotatedCorner + position;
+
+      worldMin = glm::min(worldMin, worldCorner);
+      worldMax = glm::max(worldMax, worldCorner);
+    }
+  }
+
+  bool containsPoint(const glm::vec3 &point) const
+  {
+    return (point.x >= worldMin.x && point.x <= worldMax.x) &&
+           (point.y >= worldMin.y && point.y <= worldMax.y) &&
+           (point.z >= worldMin.z && point.z <= worldMax.z);
+  }
 };

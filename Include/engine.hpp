@@ -2,6 +2,7 @@
 #include "ParticleEmitter.hpp"
 #include "UI.hpp"
 #include "ECSRegistry.hpp"
+#include "physicsSystem.hpp"
 
 struct Input
 {
@@ -22,8 +23,9 @@ public:
   Input input;
 
   ECSRegistry registry;
+  PhysicsSystem physics;
 
-  Engine(uint32_t width = 1600, uint32_t height = 1200) : WIDTH(width), HEIGHT(height), camera(), renderer(camera, WIDTH, HEIGHT)
+  Engine(uint32_t width = 1600, uint32_t height = 1200) : WIDTH(width), HEIGHT(height), camera(), renderer(camera, WIDTH, HEIGHT), registry(), physics(registry)
   {
   }
 
@@ -77,8 +79,12 @@ public:
   void addMeshComponent(Entity entity, const std::string objPath, const std::string mtlPath);
   void removeMeshComponent(Entity entity);
   void addTransformComponent(Entity entity, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale);
+  void addBoxColliderComponent(Entity entity, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale);
+  void addBoxColliderComponent(Entity entity);
   Entity createEmptyGameObject(std::string name);
   Entity getGameObjectHandle(std::string name);
+  TransformComponent &getTransformComponent(Entity entity);
+  const TransformComponent &getConstTransformComponent(Entity entity);
 
 private:
   Renderer renderer;
@@ -91,6 +97,11 @@ private:
   bool autoFreeCam = false;
 
   void initWindow(std::string windowName);
+
+  inline void transformComponentDisableJustUpdated(Entity entity)
+  {
+    registry.transforms[entity].justUpdated = false;
+  }
 
   static void framebufferResizeCallback(GLFWwindow *window, int width, int height)
   {

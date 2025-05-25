@@ -185,7 +185,7 @@ RenderCommand makeDebugCommand(VulkanDebugDrawer *drawer, Renderer *renderer, co
   return {
       [=](VkCommandBuffer cmdBuf)
       {
-        if (renderer->debugDrawer)
+        if (drawer)
         {
           vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, renderer->pipelineManager.graphicsPipeline);
           setLineListTopology(renderer, cmdBuf);

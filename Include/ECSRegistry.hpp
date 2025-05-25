@@ -13,6 +13,7 @@ private:
 public:
   std::unordered_map<Entity, TransformComponent> transforms;
   std::unordered_map<Entity, MeshComponent> meshes;
+  std::unordered_map<Entity, BoxColliderComponent> boxColliders;
   std::unordered_map<std::string, Entity> entities;
 
   Entity createEntity(std::string name)
@@ -27,9 +28,15 @@ public:
     return entities.at(name);
   }
 
+  void resetNextEntity()
+  {
+    nextEntity = 1;
+  }
+
   void destroyEntity(Entity e)
   {
     transforms.erase(e);
     meshes.erase(e);
+    boxColliders.erase(e);
   }
 };
