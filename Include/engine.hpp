@@ -97,6 +97,7 @@ private:
   bool autoFreeCam = false;
 
   void initWindow(std::string windowName);
+  void updateBoxColliders();
 
   inline void transformComponentDisableJustUpdated(Entity entity)
   {

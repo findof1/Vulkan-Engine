@@ -39,27 +39,32 @@ int main()
         ground.diffuseColor = {0.5, 0.5, 0.5};
         ground.hasTexture = 1;
 
-        // engine.addGameObject("ground", glm::vec3(0, -10, 0), glm::vec3(100, 5, 100), glm::vec3(0, 0, 0), ground, "textures/wood.png", cubeVerticesNoNormals, cubeIndices);
+        Entity skyBox = engine.createEmptyGameObject("cube");
+        engine.addMeshComponent(skyBox, ground, "textures/sky.png", cubeVerticesNoNormals, skyBoxIndices);
+        TransformComponent &transformSky = engine.getTransformComponent(skyBox);
+        transformSky.scale = glm::vec3(1000, 1000, 1000);
+        transformSky.position = glm::vec3(0, 0, 0);
 
         Entity object1 = engine.createEmptyGameObject("object");
-        engine.addMeshComponent(object1, ground, "textures/wood.png", cubeVerticesNoNormals, cubeIndices);
+        engine.addMeshComponent(object1, ground, "textures/wood.png", cubeVertices, cubeIndices);
         TransformComponent &transform = engine.getTransformComponent(object1);
         transform.scale = glm::vec3(100, 5, 100);
         transform.position = glm::vec3(0, -10, 0);
         engine.addBoxColliderComponent(object1);
 
         Entity object2 = engine.createEmptyGameObject("cube");
-        engine.addMeshComponent(object2, ground, "textures/wood.png", cubeVerticesNoNormals, cubeIndices);
+        engine.addMeshComponent(object2, ground, "textures/wood.png", cubeVertices, cubeIndices);
         TransformComponent &transform2 = engine.getTransformComponent(object2);
         transform2.scale = glm::vec3(1, 1, 1);
         transform2.position = glm::vec3(0, 0, 0);
         engine.addBoxColliderComponent(object2);
 
         Entity object3 = engine.createEmptyGameObject("cube2");
-        engine.addMeshComponent(object3, ground, "textures/wood.png", cubeVerticesNoNormals, cubeIndices);
+        engine.addMeshComponent(object3, ground, "textures/wood.png", cubeVertices, cubeIndices);
         TransformComponent &transform3 = engine.getTransformComponent(object3);
         transform3.scale = glm::vec3(1, 1, 1);
-        transform3.position = glm::vec3(5.5f, 0.5f, 0);
+        transform3.position = glm::vec3(0.0f, 0.6f, 0);
+        transform3.rotationZYX = glm::vec3(45, 45, 45);
         engine.addBoxColliderComponent(object3);
 
         engine.addTextElement("titleText", glm::vec3(10.0f, -100.0f, 0.0f), "Hello, UI!");
@@ -100,6 +105,22 @@ int main()
                 auto &transform = engine.getTransformComponent(object1);
                 transform.scale = transform.scale / 1.2f;
             });
+
+        engine.addButtonElement(
+            "button3",
+            glm::vec3(1000.0f, -900.0f, -0.5f),
+            "Move Down",
+            {glm::vec2(-20.0f, -50.0f), glm::vec2(100.0f, 50.0f)},
+            glm::vec3(0.7f, 0.0f, 0.0f),
+            glm::vec3(0.9f, 0.1f, 0.0f),
+            glm::vec3(1.0f, 0.2f, 0.2f),
+            "textures/concrete.png",
+            [&engine, object3]()
+            {
+                auto &transform = engine.getTransformComponent(object3);
+                transform.position.y -= 0.4f;
+            });
+
         engine.run();
         engine.shutdown();
     }

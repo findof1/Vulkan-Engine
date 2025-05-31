@@ -1,6 +1,7 @@
 #include "physicsSystem.hpp"
 #include "ECSRegistry.hpp"
 #include "debugDrawer.hpp"
+#include <algorithm>
 
 void PhysicsSystem::update(float deltaTime)
 {
@@ -9,16 +10,47 @@ void PhysicsSystem::update(float deltaTime)
   for (auto it1 = boxColliders.begin(); it1 != boxColliders.end(); ++it1)
   {
     drawAABB(it1->second, glm::vec3(1.0f, 0.0f, 0.0f));
+
+    if (it1->second.justUpdated == false)
+      continue;
+    it1->second.justUpdated = false;
     auto it2 = it1;
     ++it2;
     for (; it2 != boxColliders.end(); ++it2)
     {
       if (AABBOverlap(it1->second, it2->second))
       {
-        std::cout << "Collision detected between entities "
-                  << it1->first << " and " << it2->first << std::endl;
+        it1->second.justUpdated = true;
+        resolveCollision(it1->first, it2->first, it1->second, it2->second);
       }
     }
+  }
+}
+
+void PhysicsSystem::resolveCollision(Entity entityA, Entity entityB, const BoxColliderComponent &a, const BoxColliderComponent &b)
+{
+  float overlapX = std::min(a.worldMax.x - b.worldMin.x, b.worldMax.x - a.worldMin.x);
+  float overlapY = std::min(a.worldMax.y - b.worldMin.y, b.worldMax.y - a.worldMin.y);
+  float overlapZ = std::min(a.worldMax.z - b.worldMin.z, b.worldMax.z - a.worldMin.z);
+  glm::vec3 centerA = (a.worldMin + a.worldMax) * 0.5f;
+  glm::vec3 centerB = (b.worldMin + b.worldMax) * 0.5f;
+
+  glm::vec3 mtv;
+  if (overlapX < overlapY && overlapX < overlapZ)
+    mtv = glm::vec3((centerA.x < centerB.x ? -overlapX : overlapX), 0.0f, 0.0f);
+  else if (overlapY < overlapZ)
+    mtv = glm::vec3(0.0f, (centerA.y < centerB.y ? -overlapY : overlapY), 0.0f);
+  else
+    mtv = glm::vec3(0.0f, 0.0f, (centerA.z < centerB.z ? -overlapZ : overlapZ));
+
+  if (registry.transforms.find(entityA) != registry.transforms.end() && registry.transforms.find(entityB) != registry.transforms.end())
+  {
+    glm::vec3 halfMTV = mtv * 0.5f;
+
+    registry.transforms[entityA].justUpdated = true;
+    registry.transforms[entityB].justUpdated = true;
+    registry.transforms[entityA].position += halfMTV;
+    registry.transforms[entityB].position -= halfMTV;
   }
 }
 

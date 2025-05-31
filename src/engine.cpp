@@ -82,19 +82,7 @@ void Engine::run()
       }
     }
 
-    for (auto &box : registry.boxColliders)
-    {
-      if (!box.second.autoUpdate)
-      {
-        continue;
-      }
-      const TransformComponent &transform = getConstTransformComponent(box.first);
-      if (transform.justUpdated)
-      {
-        box.second.updateWorldAABB(transform.position, transform.rotationZYX, transform.scale);
-        transformComponentDisableJustUpdated(box.first);
-      }
-    }
+    updateBoxColliders();
 
     if (physics.debugDrawer)
     {
@@ -106,6 +94,23 @@ void Engine::run()
     glfwPollEvents();
   }
   vkDeviceWaitIdle(renderer.deviceManager.device);
+}
+
+void Engine::updateBoxColliders()
+{
+  for (auto &box : registry.boxColliders)
+  {
+    if (!box.second.autoUpdate)
+    {
+      continue;
+    }
+    const TransformComponent &transform = getConstTransformComponent(box.first);
+    if (transform.justUpdated)
+    {
+      box.second.updateWorldAABB(transform.position, transform.rotationZYX, transform.scale);
+      transformComponentDisableJustUpdated(box.first);
+    }
+  }
 }
 
 void Engine::clearHierarchy()

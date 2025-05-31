@@ -19,6 +19,8 @@ struct MeshComponent
 
 struct BoxColliderComponent
 {
+  bool justUpdated = true;
+
   glm::vec3 localMin = glm::vec3(-0.5f);
   glm::vec3 localMax = glm::vec3(0.5f);
 
@@ -30,10 +32,11 @@ struct BoxColliderComponent
 
   void updateWorldAABB(const glm::vec3 &position, const glm::vec3 &rotationZYX, const glm::vec3 &scale)
   {
+    justUpdated = true;
     glm::quat rotation = glm::quat(glm::radians(rotationZYX));
 
-    glm::vec3 scaledMin = localMin * (scale + 0.1f);
-    glm::vec3 scaledMax = localMax * (scale + 0.1f);
+    glm::vec3 scaledMin = localMin * (scale);
+    glm::vec3 scaledMax = localMax * (scale);
 
     glm::vec3 corners[8] = {
         glm::vec3(scaledMin.x, scaledMin.y, scaledMin.z),

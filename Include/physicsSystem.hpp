@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include "components.hpp"
 
+using Entity = uint32_t;
 class ECSRegistry;
 class VulkanDebugDrawer;
 class PhysicsSystem
@@ -26,5 +27,5 @@ private:
 
   void drawAABB(const BoxColliderComponent &box, const glm::vec3 &color);
 
-  // void resolveCollision(Entity& e1, Entity& e2);
+  void resolveCollision(Entity entityA, Entity entityB, const BoxColliderComponent &a, const BoxColliderComponent &b);
 };
