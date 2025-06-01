@@ -5,6 +5,18 @@
 
 void PhysicsSystem::update(float deltaTime)
 {
+  auto &rigidBodies = registry.rigidBodies;
+  for (auto rigidBody = rigidBodies.begin(); rigidBody != rigidBodies.end(); ++rigidBody)
+  {
+    if (rigidBody->second.isStatic)
+    {
+      continue;
+    }
+    rigidBody->second.integrate(deltaTime);
+    auto &transform = registry.transforms[rigidBody->first];
+    rigidBody->second.applyVelocity(transform, deltaTime);
+  }
+
   auto &boxColliders = registry.boxColliders;
 
   for (auto it1 = boxColliders.begin(); it1 != boxColliders.end(); ++it1)
@@ -21,6 +33,7 @@ void PhysicsSystem::update(float deltaTime)
       if (AABBOverlap(it1->second, it2->second))
       {
         it1->second.justUpdated = true;
+        it2->second.justUpdated = true;
         resolveCollision(it1->first, it2->first, it1->second, it2->second);
       }
     }
@@ -29,9 +42,10 @@ void PhysicsSystem::update(float deltaTime)
 
 void PhysicsSystem::resolveCollision(Entity entityA, Entity entityB, const BoxColliderComponent &a, const BoxColliderComponent &b)
 {
-  float overlapX = std::min(a.worldMax.x - b.worldMin.x, b.worldMax.x - a.worldMin.x);
-  float overlapY = std::min(a.worldMax.y - b.worldMin.y, b.worldMax.y - a.worldMin.y);
-  float overlapZ = std::min(a.worldMax.z - b.worldMin.z, b.worldMax.z - a.worldMin.z);
+  float overlapX = std::min(a.worldMax.x, b.worldMax.x) - std::max(a.worldMin.x, b.worldMin.x);
+  float overlapY = std::min(a.worldMax.y, b.worldMax.y) - std::max(a.worldMin.y, b.worldMin.y);
+  float overlapZ = std::min(a.worldMax.z, b.worldMax.z) - std::max(a.worldMin.z, b.worldMin.z);
+
   glm::vec3 centerA = (a.worldMin + a.worldMax) * 0.5f;
   glm::vec3 centerB = (b.worldMin + b.worldMax) * 0.5f;
 
@@ -42,16 +56,52 @@ void PhysicsSystem::resolveCollision(Entity entityA, Entity entityB, const BoxCo
     mtv = glm::vec3(0.0f, (centerA.y < centerB.y ? -overlapY : overlapY), 0.0f);
   else
     mtv = glm::vec3(0.0f, 0.0f, (centerA.z < centerB.z ? -overlapZ : overlapZ));
+  glm::vec3 halfMTV = mtv * 0.5f;
 
-  if (registry.transforms.find(entityA) != registry.transforms.end() && registry.transforms.find(entityB) != registry.transforms.end())
+  bool bothEntitiesHaveTransforms = registry.transforms.find(entityA) != registry.transforms.end() && registry.transforms.find(entityB) != registry.transforms.end();
+  bool entityAHasRigidBody = registry.rigidBodies.find(entityA) != registry.rigidBodies.end();
+  bool entityBHasRigidBody = registry.rigidBodies.find(entityB) != registry.rigidBodies.end();
+  if (!(bothEntitiesHaveTransforms && (entityAHasRigidBody || entityBHasRigidBody)))
   {
-    glm::vec3 halfMTV = mtv * 0.5f;
-
-    registry.transforms[entityA].justUpdated = true;
-    registry.transforms[entityB].justUpdated = true;
-    registry.transforms[entityA].position += halfMTV;
-    registry.transforms[entityB].position -= halfMTV;
+    return;
   }
+
+  bool entityAStatic = registry.rigidBodies[entityA].isStatic || !entityAHasRigidBody;
+  bool entityBStatic = registry.rigidBodies[entityB].isStatic || !entityBHasRigidBody;
+
+  if (entityAStatic && entityBStatic)
+  {
+    return;
+  }
+
+  if (entityAStatic)
+  {
+    registry.transforms[entityB].justUpdated = true;
+    registry.transforms[entityB].position -= mtv;
+    if (entityBHasRigidBody)
+    {
+      registry.rigidBodies[entityB].velocity = glm::vec3(0);
+    }
+    return;
+  }
+
+  if (entityBStatic)
+  {
+    registry.transforms[entityA].justUpdated = true;
+    registry.transforms[entityA].position += mtv;
+    if (entityAHasRigidBody)
+    {
+      registry.rigidBodies[entityA].velocity = glm::vec3(0);
+    }
+    return;
+  }
+
+  registry.transforms[entityA].justUpdated = true;
+  registry.transforms[entityB].justUpdated = true;
+  registry.transforms[entityA].position += halfMTV;
+  registry.transforms[entityB].position -= halfMTV;
+  registry.rigidBodies[entityA].velocity = glm::vec3(0);
+  registry.rigidBodies[entityB].velocity = glm::vec3(0);
 }
 
 bool PhysicsSystem::AABBOverlap(const BoxColliderComponent &a, const BoxColliderComponent &b)

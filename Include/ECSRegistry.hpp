@@ -14,6 +14,7 @@ public:
   std::unordered_map<Entity, TransformComponent> transforms;
   std::unordered_map<Entity, MeshComponent> meshes;
   std::unordered_map<Entity, BoxColliderComponent> boxColliders;
+  std::unordered_map<Entity, RigidBodyComponent> rigidBodies;
   std::unordered_map<std::string, Entity> entities;
 
   Entity createEntity(std::string name)

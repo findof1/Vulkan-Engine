@@ -19,12 +19,17 @@
 #include "engine.hpp"
 #include "primitives.hpp"
 
-void start()
+void start(Engine *engine)
 {
 }
 
-void update(float dt)
+void update(Engine *engine, float dt)
 {
+    if (engine->input.keys[GLFW_KEY_X])
+    {
+        Entity object3 = engine->getGameObjectHandle("cube2");
+        engine->applyRigidBodyForce(object3, glm::vec3(0, 20, 0));
+    }
 }
 
 int main()
@@ -48,24 +53,28 @@ int main()
         Entity object1 = engine.createEmptyGameObject("object");
         engine.addMeshComponent(object1, ground, "textures/wood.png", cubeVertices, cubeIndices);
         TransformComponent &transform = engine.getTransformComponent(object1);
-        transform.scale = glm::vec3(100, 5, 100);
+        transform.scale = glm::vec3(100, 25, 100);
         transform.position = glm::vec3(0, -10, 0);
         engine.addBoxColliderComponent(object1);
+        engine.addRigidBodyComponent(object1);
+        engine.setRigidBodyComponentStatic(object1, true);
 
         Entity object2 = engine.createEmptyGameObject("cube");
         engine.addMeshComponent(object2, ground, "textures/wood.png", cubeVertices, cubeIndices);
         TransformComponent &transform2 = engine.getTransformComponent(object2);
         transform2.scale = glm::vec3(1, 1, 1);
-        transform2.position = glm::vec3(0, 0, 0);
+        transform2.position = glm::vec3(0, 300, 0);
         engine.addBoxColliderComponent(object2);
+        engine.addRigidBodyComponent(object2);
 
         Entity object3 = engine.createEmptyGameObject("cube2");
         engine.addMeshComponent(object3, ground, "textures/wood.png", cubeVertices, cubeIndices);
         TransformComponent &transform3 = engine.getTransformComponent(object3);
         transform3.scale = glm::vec3(1, 1, 1);
-        transform3.position = glm::vec3(0.0f, 0.6f, 0);
+        transform3.position = glm::vec3(0.1f, 350.0f, 0);
         transform3.rotationZYX = glm::vec3(45, 45, 45);
         engine.addBoxColliderComponent(object3);
+        engine.addRigidBodyComponent(object3);
 
         engine.addTextElement("titleText", glm::vec3(10.0f, -100.0f, 0.0f), "Hello, UI!");
 
@@ -106,20 +115,18 @@ int main()
                 transform.scale = transform.scale / 1.2f;
             });
 
-        engine.addButtonElement(
+        /*engine.addButtonElement(
             "button3",
             glm::vec3(1000.0f, -900.0f, -0.5f),
-            "Move Down",
-            {glm::vec2(-20.0f, -50.0f), glm::vec2(100.0f, 50.0f)},
+            "Move Up",
+            {glm::vec2(-20.0f, -50.0f), glm::vec2(250.0f, 50.0f)},
             glm::vec3(0.7f, 0.0f, 0.0f),
             glm::vec3(0.9f, 0.1f, 0.0f),
             glm::vec3(1.0f, 0.2f, 0.2f),
             "textures/concrete.png",
-            [&engine, object3]()
-            {
-                auto &transform = engine.getTransformComponent(object3);
-                transform.position.y -= 0.4f;
-            });
+            [&engine, object3]() {
+
+            });*/
 
         engine.run();
         engine.shutdown();

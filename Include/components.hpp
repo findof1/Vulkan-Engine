@@ -68,3 +68,47 @@ struct BoxColliderComponent
            (point.z >= worldMin.z && point.z <= worldMax.z);
   }
 };
+
+struct RigidBodyComponent
+{
+  glm::vec3 velocity = glm::vec3(0.0f);
+
+  glm::vec3 acceleration = glm::vec3(0.0f);
+
+  float mass = 1.0f;
+
+  bool useGravity = true;
+
+  bool isStatic = false;
+
+  void applyForce(const glm::vec3 &force)
+  {
+    if (isStatic || mass <= 0.0f)
+      return;
+    acceleration += force / mass;
+  }
+
+  void integrate(float deltaTime)
+  {
+    if (isStatic)
+      return;
+
+    if (useGravity)
+    {
+      glm::vec3 gravity(0.0f, -9.81f, 0.0f);
+      acceleration += gravity;
+    }
+
+    velocity += acceleration * deltaTime;
+
+    acceleration = glm::vec3(0.0f);
+  }
+
+  void applyVelocity(TransformComponent &transform, float deltaTime)
+  {
+    if (isStatic)
+      return;
+    transform.position += velocity * deltaTime;
+    transform.justUpdated = true;
+  }
+};

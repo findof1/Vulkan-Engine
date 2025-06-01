@@ -37,7 +37,7 @@ void Engine::enableCursor()
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
 
-void Engine::init(std::string windowName, std::function<void()> startFn, std::function<void(float)> updateFn)
+void Engine::init(std::string windowName, std::function<void(Engine *)> startFn, std::function<void(Engine *, float)> updateFn)
 {
   start = std::move(startFn);
   update = std::move(updateFn);
@@ -53,6 +53,8 @@ void Engine::run()
   float lastFrame = 0.0f;
   float deltaTime = 0.0f;
 
+  start(this);
+
   while (isRunning && !glfwWindowShouldClose(window))
   {
     float currentFrame = static_cast<float>(glfwGetTime());
@@ -62,7 +64,7 @@ void Engine::run()
     if (autoFreeCam)
       updateFreeCam(deltaTime);
 
-    update(deltaTime);
+    update(this, deltaTime);
 
     for (auto &[key, ui_ptr] : UIElements)
     {
@@ -410,6 +412,48 @@ void Engine::removeMeshComponent(Entity entity)
   {
     mesh.cleanup(renderer.deviceManager.device, renderer);
   }
+
+  registry.meshes.erase(entity);
+}
+
+void Engine::addRigidBodyComponent(Entity entity)
+{
+  if (registry.rigidBodies.find(entity) != registry.rigidBodies.end())
+    return;
+  registry.rigidBodies.emplace(entity, RigidBodyComponent());
+}
+
+void Engine::removeRigidBodyComponent(Entity entity)
+{
+  registry.rigidBodies.erase(entity);
+}
+
+void Engine::setRigidBodyComponentStatic(Entity entity, bool isStatic)
+{
+  auto it = registry.rigidBodies.find(entity);
+  if (it != registry.rigidBodies.end())
+    it->second.isStatic = isStatic;
+}
+
+void Engine::setRigidBodyComponentUseGravity(Entity entity, bool useGravity)
+{
+  auto it = registry.rigidBodies.find(entity);
+  if (it != registry.rigidBodies.end())
+    it->second.useGravity = useGravity;
+}
+
+void Engine::setRigidBodyComponentMass(Entity entity, float mass)
+{
+  auto it = registry.rigidBodies.find(entity);
+  if (it != registry.rigidBodies.end())
+    it->second.mass = mass;
+}
+
+void Engine::applyRigidBodyForce(Entity entity, const glm::vec3 &force)
+{
+  auto it = registry.rigidBodies.find(entity);
+  if (it != registry.rigidBodies.end())
+    it->second.applyForce(force);
 }
 
 TransformComponent &Engine::getTransformComponent(Entity entity)
@@ -428,10 +472,11 @@ void Engine::addTransformComponent(Entity entity, glm::vec3 position, glm::vec3 
   if (registry.transforms.find(entity) != registry.transforms.end())
     return;
 
-  TransformComponent &transformComp = registry.transforms[entity];
+  TransformComponent transformComp;
   transformComp.position = position;
   transformComp.rotationZYX = rotation;
   transformComp.scale = scale;
+  registry.transforms.emplace(entity, std::move(transformComp));
 }
 
 void Engine::addBoxColliderComponent(Entity entity, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale)

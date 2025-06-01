@@ -29,7 +29,7 @@ public:
   {
   }
 
-  void init(std::string windowName, std::function<void()> startFn, std::function<void(float)> updateFn);
+  void init(std::string windowName, std::function<void(Engine *)> startFn, std::function<void(Engine *, float)> updateFn);
   void run();
   void shutdown();
 
@@ -81,6 +81,12 @@ public:
   void addTransformComponent(Entity entity, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale);
   void addBoxColliderComponent(Entity entity, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale);
   void addBoxColliderComponent(Entity entity);
+  void addRigidBodyComponent(Entity entity);
+  void setRigidBodyComponentStatic(Entity entity, bool isStatic);
+  void removeRigidBodyComponent(Entity entity);
+  void setRigidBodyComponentUseGravity(Entity entity, bool useGravity);
+  void setRigidBodyComponentMass(Entity entity, float mass);
+  void applyRigidBodyForce(Entity entity, const glm::vec3 &force);
   Entity createEmptyGameObject(std::string name);
   Entity getGameObjectHandle(std::string name);
   TransformComponent &getTransformComponent(Entity entity);
@@ -90,8 +96,8 @@ private:
   Renderer renderer;
   GLFWwindow *window;
   int nextRenderingId = 0;
-  std::function<void(float)> update;
-  std::function<void()> start;
+  std::function<void(Engine *, float)> update;
+  std::function<void(Engine *)> start;
   std::vector<ParticleEmitter> particleEmitters;
   std::unordered_map<std::string, std::unique_ptr<UI>> UIElements;
   bool autoFreeCam = false;

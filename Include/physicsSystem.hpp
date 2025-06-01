@@ -19,8 +19,6 @@ public:
   void update(float deltaTime);
 
 private:
-  // void applyPhysics(float deltaTime);
-
   void handleCollisions();
 
   bool AABBOverlap(const BoxColliderComponent &a, const BoxColliderComponent &b);
