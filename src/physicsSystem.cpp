@@ -58,6 +58,8 @@ void PhysicsSystem::resolveCollision(Entity entityA, Entity entityB, const BoxCo
     mtv = glm::vec3(0.0f, 0.0f, (centerA.z < centerB.z ? -overlapZ : overlapZ));
   glm::vec3 halfMTV = mtv * 0.5f;
 
+  glm::vec3 collisionNormal = getAABBCollisionNormal(overlapX, overlapY, overlapZ, centerA, centerB);
+
   bool bothEntitiesHaveTransforms = registry.transforms.find(entityA) != registry.transforms.end() && registry.transforms.find(entityB) != registry.transforms.end();
   bool entityAHasRigidBody = registry.rigidBodies.find(entityA) != registry.rigidBodies.end();
   bool entityBHasRigidBody = registry.rigidBodies.find(entityB) != registry.rigidBodies.end();
@@ -80,7 +82,7 @@ void PhysicsSystem::resolveCollision(Entity entityA, Entity entityB, const BoxCo
     registry.transforms[entityB].position -= mtv;
     if (entityBHasRigidBody)
     {
-      registry.rigidBodies[entityB].velocity = glm::vec3(0);
+      registry.rigidBodies[entityB].velocity = removeVelocityAlongAxis(registry.rigidBodies[entityB].velocity, collisionNormal);
     }
     return;
   }
@@ -91,7 +93,7 @@ void PhysicsSystem::resolveCollision(Entity entityA, Entity entityB, const BoxCo
     registry.transforms[entityA].position += mtv;
     if (entityAHasRigidBody)
     {
-      registry.rigidBodies[entityA].velocity = glm::vec3(0);
+      registry.rigidBodies[entityA].velocity = removeVelocityAlongAxis(registry.rigidBodies[entityA].velocity, collisionNormal);
     }
     return;
   }
@@ -100,8 +102,26 @@ void PhysicsSystem::resolveCollision(Entity entityA, Entity entityB, const BoxCo
   registry.transforms[entityB].justUpdated = true;
   registry.transforms[entityA].position += halfMTV;
   registry.transforms[entityB].position -= halfMTV;
-  registry.rigidBodies[entityA].velocity = glm::vec3(0);
-  registry.rigidBodies[entityB].velocity = glm::vec3(0);
+  registry.rigidBodies[entityA].velocity = removeVelocityAlongAxis(registry.rigidBodies[entityA].velocity, collisionNormal);
+  registry.rigidBodies[entityB].velocity = removeVelocityAlongAxis(registry.rigidBodies[entityB].velocity, collisionNormal);
+}
+
+glm::vec3 PhysicsSystem::removeVelocityAlongAxis(const glm::vec3 &velocity, const glm::vec3 &axis)
+{
+  glm::vec3 axisNormalized = glm::normalize(axis);
+  float projection = glm::dot(velocity, axisNormalized);
+  glm::vec3 vec = velocity - projection * axisNormalized;
+  return velocity - projection * axisNormalized;
+}
+
+glm::vec3 PhysicsSystem::getAABBCollisionNormal(float overlapX, float overlapY, float overlapZ, glm::vec3 centerA, glm::vec3 centerB)
+{
+  if (overlapX < overlapY && overlapX < overlapZ)
+    return glm::vec3(centerA.x < centerB.x ? -1 : 1, 0, 0);
+  else if (overlapY < overlapZ)
+    return glm::vec3(0, centerA.y < centerB.y ? -1 : 1, 0);
+  else
+    return glm::vec3(0, 0, centerA.z < centerB.z ? -1 : 1);
 }
 
 bool PhysicsSystem::AABBOverlap(const BoxColliderComponent &a, const BoxColliderComponent &b)

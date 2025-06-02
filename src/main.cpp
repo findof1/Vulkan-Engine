@@ -25,10 +25,29 @@ void start(Engine *engine)
 
 void update(Engine *engine, float dt)
 {
-    if (engine->input.keys[GLFW_KEY_X])
+    Entity object3 = engine->getGameObjectHandle("cube2");
+    if (engine->input.keys[GLFW_KEY_B])
     {
-        Entity object3 = engine->getGameObjectHandle("cube2");
         engine->applyRigidBodyForce(object3, glm::vec3(0, 20, 0));
+    }
+    if (engine->input.keys[GLFW_KEY_T])
+    {
+        engine->applyRigidBodyForce(object3, glm::vec3(5, 0, 0));
+    }
+
+    if (engine->input.keys[GLFW_KEY_F])
+    {
+        engine->applyRigidBodyForce(object3, glm::vec3(0, 0, -5));
+    }
+
+    if (engine->input.keys[GLFW_KEY_G])
+    {
+        engine->applyRigidBodyForce(object3, glm::vec3(-5, 0, 0));
+    }
+
+    if (engine->input.keys[GLFW_KEY_H])
+    {
+        engine->applyRigidBodyForce(object3, glm::vec3(0, 0, 5));
     }
 }
 
