@@ -35,8 +35,8 @@ struct BoxColliderComponent
     justUpdated = true;
     glm::quat rotation = glm::quat(glm::radians(rotationZYX));
 
-    glm::vec3 scaledMin = localMin * (scale);
-    glm::vec3 scaledMax = localMax * (scale);
+    glm::vec3 scaledMin = localMin * scale;
+    glm::vec3 scaledMax = localMax * scale;
 
     glm::vec3 corners[8] = {
         glm::vec3(scaledMin.x, scaledMin.y, scaledMin.z),
@@ -59,6 +59,40 @@ struct BoxColliderComponent
       worldMin = glm::min(worldMin, worldCorner);
       worldMax = glm::max(worldMax, worldCorner);
     }
+  }
+
+  std::vector<glm::vec3> getWorldCorners(const glm::vec3 &position, const glm::vec3 &rotationZYX, const glm::vec3 &scale) const
+  {
+    glm::quat rotation = glm::quat(glm::radians(rotationZYX));
+    glm::vec3 scaledMin = localMin * scale;
+    glm::vec3 scaledMax = localMax * scale;
+
+    glm::vec3 corners[8] = {
+        glm::vec3(scaledMin.x, scaledMin.y, scaledMin.z),
+        glm::vec3(scaledMax.x, scaledMin.y, scaledMin.z),
+        glm::vec3(scaledMin.x, scaledMax.y, scaledMin.z),
+        glm::vec3(scaledMax.x, scaledMax.y, scaledMin.z),
+        glm::vec3(scaledMin.x, scaledMin.y, scaledMax.z),
+        glm::vec3(scaledMax.x, scaledMin.y, scaledMax.z),
+        glm::vec3(scaledMin.x, scaledMax.y, scaledMax.z),
+        glm::vec3(scaledMax.x, scaledMax.y, scaledMax.z),
+    };
+
+    std::vector<glm::vec3> worldCorners;
+    for (const glm::vec3 &corner : corners)
+    {
+      glm::vec3 rotatedCorner = rotation * corner;
+      worldCorners.push_back(rotatedCorner + position);
+    }
+    return worldCorners;
+  }
+
+  void getWorldAxes(const glm::vec3 &rotationZYX, glm::vec3 axes[3]) const
+  {
+    glm::quat rotation = glm::quat(glm::radians(rotationZYX));
+    axes[0] = rotation * glm::vec3(1, 0, 0);
+    axes[1] = rotation * glm::vec3(0, 1, 0);
+    axes[2] = rotation * glm::vec3(0, 0, 1);
   }
 
   bool containsPoint(const glm::vec3 &point) const

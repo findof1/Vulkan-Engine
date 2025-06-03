@@ -74,6 +74,7 @@ int main()
         TransformComponent &transform = engine.getTransformComponent(object1);
         transform.scale = glm::vec3(100, 25, 100);
         transform.position = glm::vec3(0, -10, 0);
+        transform.rotationZYX = glm::vec3(0, 0, 0);
         engine.addBoxColliderComponent(object1);
         engine.addRigidBodyComponent(object1);
         engine.setRigidBodyComponentStatic(object1, true);
