@@ -7,7 +7,7 @@
 #include <tiny_obj_loader.h>
 #include <glm/gtc/quaternion.hpp>
 
-Mesh::Mesh(Renderer &renderer, int *nextRenderingId, MaterialData &newMaterial, const std::vector<Vertex> &vertices, const std::vector<uint32_t> &indices) : vertices(vertices), indices(indices), material(newMaterial), textureManager(renderer.bufferManager, renderer)
+Mesh::Mesh(Renderer &renderer, int *nextRenderingId, MaterialData newMaterial, const std::vector<Vertex> &vertices, const std::vector<uint32_t> &indices) : vertices(vertices), indices(indices), material(newMaterial), textureManager(renderer.bufferManager, renderer)
 {
   id = *nextRenderingId;
   (*nextRenderingId)++;
@@ -15,6 +15,7 @@ Mesh::Mesh(Renderer &renderer, int *nextRenderingId, MaterialData &newMaterial, 
 
 void Mesh::initGraphics(Renderer &renderer, std::string texturePath)
 {
+  texPath = texturePath;
   textureManager.createTextureImage(texturePath, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, renderer.commandPool, renderer.graphicsQueue);
   textureManager.createTextureImageView(renderer.deviceManager.device);
   textureManager.createTextureSampler(renderer.deviceManager.device, renderer.deviceManager.physicalDevice);

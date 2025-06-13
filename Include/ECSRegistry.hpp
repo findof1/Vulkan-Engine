@@ -40,4 +40,15 @@ public:
     meshes.erase(e);
     boxColliders.erase(e);
   }
+
+  // only use these for serialization stuff :)
+  void setNextEntity(Entity newEntity)
+  {
+    nextEntity = newEntity;
+  }
+
+  const int getNextEntity()
+  {
+    return nextEntity;
+  }
 };

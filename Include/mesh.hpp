@@ -27,10 +27,12 @@ public:
   std::vector<uint32_t> indices;
   int id;
 
+  std::string texPath;
+
   MaterialData material;
   TextureManager textureManager;
 
-  Mesh(Renderer &renderer, int *nextRenderingId, MaterialData &material, const std::vector<Vertex> &vertices, const std::vector<uint32_t> &indices);
+  Mesh(Renderer &renderer, int *nextRenderingId, MaterialData material, const std::vector<Vertex> &vertices, const std::vector<uint32_t> &indices);
   void initGraphics(Renderer &renderer, std::string texturePath);
   void draw(Renderer *renderer, int currentFrame, glm::mat4 transformation, glm::mat4 view, glm::mat4 projectionMatrix, VkCommandBuffer commandBuffer);
   void cleanup(VkDevice device, Renderer &renderer);

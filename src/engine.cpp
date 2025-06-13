@@ -8,6 +8,7 @@
 #include "renderCommands.hpp"
 #include "debugDrawer.hpp"
 #include <tiny_obj_loader.h>
+#include <serializationUtils.hpp>
 
 void Engine::initWindow(std::string windowName)
 {
@@ -256,7 +257,17 @@ void Engine::updateFreeCam(float dt)
   input.scrollOffsetY = 0.0;
 }
 
-void Engine::addMeshComponent(Entity entity, MaterialData &material, const std::string &texturePath, const std::vector<Vertex> &vertices, const std::vector<uint32_t> &indices)
+void Engine::addEmptyMeshComponent(Entity entity)
+{
+  if (registry.meshes.find(entity) != registry.meshes.end())
+    return;
+
+  MeshComponent meshComp;
+  meshComp.loadedFromFile = false;
+  registry.meshes.emplace(entity, std::move(meshComp));
+}
+
+void Engine::addMeshComponent(Entity entity, MaterialData material, const std::string &texturePath, const std::vector<Vertex> &vertices, const std::vector<uint32_t> &indices)
 {
   if (registry.meshes.find(entity) != registry.meshes.end())
     return;
@@ -264,7 +275,23 @@ void Engine::addMeshComponent(Entity entity, MaterialData &material, const std::
   Mesh mesh(renderer, &nextRenderingId, material, vertices, indices);
   mesh.initGraphics(renderer, texturePath.empty() ? "models/couch/diffuse.png" : texturePath);
 
-  MeshComponent &meshComp = registry.meshes[entity];
+  MeshComponent meshComp;
+  meshComp.loadedFromFile = false;
+  meshComp.meshes.emplace_back(std::move(mesh));
+  registry.meshes.emplace(entity, std::move(meshComp));
+}
+
+void Engine::addMeshToComponent(Entity entity, MaterialData material, const std::string &texturePath, const std::vector<Vertex> &vertices, const std::vector<uint32_t> &indices)
+{
+  if (registry.meshes.find(entity) == registry.meshes.end())
+    return;
+
+  MeshComponent &meshComp = registry.meshes.at(entity);
+  if (meshComp.loadedFromFile)
+    return;
+
+  Mesh mesh(renderer, &nextRenderingId, material, vertices, indices);
+  mesh.initGraphics(renderer, texturePath.empty() ? "models/couch/diffuse.png" : texturePath);
   meshComp.meshes.emplace_back(std::move(mesh));
 }
 
@@ -273,7 +300,10 @@ void Engine::addMeshComponent(Entity entity, const std::string objPath, const st
   if (registry.meshes.find(entity) != registry.meshes.end())
     return;
 
-  MeshComponent &meshComp = registry.meshes[entity];
+  MeshComponent meshComp;
+  meshComp.loadedFromFile = true;
+  meshComp.objPath = objPath;
+  meshComp.mtlPath = mtlPath;
 
   tinyobj::attrib_t attrib;
   std::vector<tinyobj::shape_t> shapes;
@@ -403,6 +433,7 @@ void Engine::addMeshComponent(Entity entity, const std::string objPath, const st
     }
     meshComp.meshes.push_back(std::move(mesh));
   }
+  registry.meshes.emplace(entity, std::move(meshComp));
 }
 
 void Engine::removeMeshComponent(Entity entity)
@@ -509,4 +540,76 @@ Entity Engine::createEmptyGameObject(std::string name)
 Entity Engine::getGameObjectHandle(std::string name)
 {
   return registry.getEntity(name);
+}
+
+void Engine::serializeScene(const std::string &filePath)
+{
+  std::ofstream out(filePath, std::ios::binary);
+  if (!out)
+  {
+    std::cerr << "Failed to open " << filePath << " for serialization." << std::endl;
+    return;
+  }
+
+  int serializationVersion = 1;
+  writeInt(out, serializationVersion);
+
+  writeUInt(out, registry.getNextEntity());
+
+  writeTransforms(out, registry.transforms);
+  writeMeshes(out, registry.meshes);
+  writeIdentifiers(out, registry.entities);
+  writeBoxColliders(out, registry.boxColliders);
+  writeRigidBodies(out, registry.rigidBodies);
+}
+
+void Engine::deserializeScene(const std::string &filePath)
+{
+  registry.transforms.clear();
+  registry.meshes.clear();
+  registry.entities.clear();
+  registry.boxColliders.clear();
+  registry.rigidBodies.clear();
+
+  std::ifstream in(filePath, std::ios::binary);
+  if (!in)
+  {
+    std::cerr << "Failed to open " << filePath << " for deserialization." << std::endl;
+    return;
+  }
+
+  int serializationVersion;
+  readInt(in, serializationVersion);
+  if (serializationVersion != 1)
+  {
+    std::cerr << "Unsupported version for deserialization." << std::endl;
+    return;
+  }
+
+  Entity nextEntity;
+  readUInt(in, nextEntity);
+  registry.setNextEntity(nextEntity);
+
+  readTransforms(in, registry.transforms);
+  readMeshes(in, this);
+  readIdentifiers(in, registry.entities);
+  readBoxColliders(in, registry.boxColliders);
+
+  for (auto &box : registry.boxColliders)
+  {
+    if (box.second.autoUpdate)
+    {
+      if (registry.transforms.find(box.first) == registry.transforms.end())
+        continue;
+
+      TransformComponent &t = registry.transforms.at(box.first);
+      box.second.updateWorldAABB(t.position, t.rotationZYX, t.scale);
+    }
+    else
+    {
+      box.second.updateWorldAABB(box.second.position, box.second.rotationZYX, box.second.scale);
+    }
+  }
+
+  readRigidBodies(in, registry.rigidBodies);
 }

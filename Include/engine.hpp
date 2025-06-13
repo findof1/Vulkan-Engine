@@ -75,8 +75,10 @@ public:
   void disableCursor();
   void enableCursor();
 
-  void addMeshComponent(Entity entity, MaterialData &material, const std::string &texturePath, const std::vector<Vertex> &vertices, const std::vector<uint32_t> &indices);
+  void addEmptyMeshComponent(Entity entity);
+  void addMeshComponent(Entity entity, MaterialData material, const std::string &texturePath, const std::vector<Vertex> &vertices, const std::vector<uint32_t> &indices);
   void addMeshComponent(Entity entity, const std::string objPath, const std::string mtlPath);
+  void addMeshToComponent(Entity entity, MaterialData material, const std::string &texturePath, const std::vector<Vertex> &vertices, const std::vector<uint32_t> &indices);
   void removeMeshComponent(Entity entity);
   void addTransformComponent(Entity entity, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale);
   void addBoxColliderComponent(Entity entity, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale);
@@ -91,6 +93,9 @@ public:
   Entity getGameObjectHandle(std::string name);
   TransformComponent &getTransformComponent(Entity entity);
   const TransformComponent &getConstTransformComponent(Entity entity);
+
+  void serializeScene(const std::string &filePath);
+  void deserializeScene(const std::string &filePath);
 
 private:
   Renderer renderer;

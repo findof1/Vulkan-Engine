@@ -174,13 +174,15 @@ void PhysicsSystem::update(float deltaTime)
   {
     drawAABB(it1->second, glm::vec3(1.0f, 0.0f, 0.0f));
 
-    if (it1->second.justUpdated == false)
-      continue;
-    it1->second.justUpdated = false;
     auto it2 = it1;
     ++it2;
     for (; it2 != boxColliders.end(); ++it2)
     {
+      if (it1->second.justUpdated == false && it2->second.justUpdated == false)
+        continue;
+      it1->second.justUpdated = false;
+      it2->second.justUpdated = false;
+
       glm::vec3 mtv;
       glm::vec3 collisionNormal;
       if (AABBOverlap(it1->second, it2->second) && SATCollision(it1->first, it2->first, it1->second, it2->second, mtv, collisionNormal))

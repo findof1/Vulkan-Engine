@@ -59,6 +59,7 @@ int main()
         engine.init("Game Engine", start, update);
         engine.useFreeCamMode(true);
         engine.enableDebug();
+        /*
         MaterialData ground;
         ground.diffuseColor = {0.5, 0.5, 0.5};
         ground.hasTexture = 1;
@@ -135,7 +136,7 @@ int main()
                 transform.scale = transform.scale / 1.2f;
             });
 
-        /*engine.addButtonElement(
+        engine.addButtonElement(
             "button3",
             glm::vec3(1000.0f, -900.0f, -0.5f),
             "Move Up",
@@ -147,7 +148,7 @@ int main()
             [&engine, object3]() {
 
             });*/
-
+        engine.deserializeScene("scene.bin");
         engine.run();
         engine.shutdown();
     }

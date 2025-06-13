@@ -15,6 +15,10 @@ struct MeshComponent
 {
   bool hide = false;
   std::vector<Mesh> meshes;
+
+  bool loadedFromFile = false;
+  std::string objPath;
+  std::string mtlPath;
 };
 
 struct BoxColliderComponent
@@ -27,11 +31,19 @@ struct BoxColliderComponent
   glm::vec3 worldMin;
   glm::vec3 worldMax;
 
-  bool active = true;
   bool autoUpdate = false;
 
-  void updateWorldAABB(const glm::vec3 &position, const glm::vec3 &rotationZYX, const glm::vec3 &scale)
+  // serialization stuff
+  glm::vec3 position;
+  glm::vec3 rotationZYX;
+  glm::vec3 scale;
+
+  void updateWorldAABB(const glm::vec3 &positionIn, const glm::vec3 &rotationZYXIn, const glm::vec3 &scaleIn)
   {
+    position = positionIn;
+    rotationZYX = rotationZYXIn;
+    scale = scaleIn;
+
     justUpdated = true;
     glm::quat rotation = glm::quat(glm::radians(rotationZYX));
 
