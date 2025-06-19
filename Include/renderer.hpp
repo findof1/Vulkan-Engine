@@ -19,6 +19,7 @@
 #include "vertex.h"
 #include <ft2build.h>
 #include <functional>
+#include "engineUI.hpp"
 #include FT_FREETYPE_H
 
 class Camera;
@@ -59,6 +60,8 @@ public:
   void initVulkan();
 
   Renderer(Camera &camera, uint32_t &WIDTH, uint32_t &HEIGHT);
+
+  EngineUI engineUI;
 
   Camera &camera;
   VkInstance instance;

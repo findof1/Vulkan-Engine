@@ -9,6 +9,9 @@
 #include "debugDrawer.hpp"
 #include <tiny_obj_loader.h>
 #include <serializationUtils.hpp>
+#include <imgui_impl_vulkan.h>
+#include <imgui_impl_glfw.h>
+#include <imgui.h>
 
 void Engine::initWindow(std::string windowName)
 {
@@ -47,6 +50,7 @@ void Engine::init(std::string windowName, std::function<void(Engine *)> startFn,
   renderer.initVulkan();
   particleEmitters.emplace_back(renderer, &nextRenderingId, 512, glm::vec3(-1000));
   particleEmitters.at(0).hide = true;
+  renderer.engineUI.initImGui(&renderer);
 }
 
 void Engine::run()
@@ -190,6 +194,16 @@ void Engine::render()
 
   if (physics.debugDrawer)
     renderer.renderQueue.push_back(makeDebugCommand(physics.debugDrawer, &renderer, physics.debugDrawer->debugLines, view, proj, renderer.getCurrentFrame()));
+
+  ImGui_ImplVulkan_NewFrame();
+  ImGui_ImplGlfw_NewFrame();
+  ImGui::NewFrame();
+
+  ImGui::Begin("Hello Vulkan + ImGui");
+  ImGui::Text("This is a example.");
+  ImGui::End();
+
+  ImGui::Render();
 
   renderer.drawFrame();
 }

@@ -273,6 +273,10 @@ bool PhysicsSystem::AABBOverlap(const BoxColliderComponent &a, const BoxCollider
 
 void PhysicsSystem::drawAABB(const BoxColliderComponent &box, const glm::vec3 &color)
 {
+  if (debugDrawer == nullptr)
+  {
+    return;
+  }
   glm::vec3 min = box.worldMin;
   glm::vec3 max = box.worldMax;
 

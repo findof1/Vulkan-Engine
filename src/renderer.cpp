@@ -5,6 +5,8 @@
 #include <cstring>
 #include "text.hpp"
 #include "particleEmitter.hpp"
+#include <imgui.h>
+#include <imgui_impl_vulkan.h>
 
 Renderer::Renderer(Camera &camera, uint32_t &WIDTH, uint32_t &HEIGHT)
     : bufferManager(), swapchainManager(), deviceManager(swapchainManager), descriptorManager(bufferManager), pipelineManager(swapchainManager, descriptorManager), camera(camera), WIDTH(WIDTH), HEIGHT(HEIGHT)
@@ -202,6 +204,8 @@ void Renderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
   {
     cmd.execute(commandBuffer);
   }
+
+  ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
 
   endRenderPass(commandBuffer);
   endCommandBuffer(commandBuffer);

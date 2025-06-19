@@ -134,18 +134,6 @@ bool DeviceManager::isDeviceSuitable(VkPhysicalDevice device, const std::vector<
   }
 
   return indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy && supportedFeatures.robustBufferAccess;
-
-  // another example
-  /*
-  QueueFamilyIndices indices = findQueueFamilies(device);
-  VkPhysicalDeviceProperties deviceProperties;
-  VkPhysicalDeviceFeatures deviceFeatures;
-  vkGetPhysicalDeviceProperties(device, &deviceProperties);
-  vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
-
-  return deviceProperties.deviceType == (VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU || VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU) &&
-         deviceFeatures.geometryShader && indices.isComplete();
-  */
 }
 
 bool DeviceManager::checkDeviceExtensionSupport(VkPhysicalDevice device, const std::vector<const char *> &deviceExtensions)
