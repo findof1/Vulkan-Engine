@@ -34,6 +34,6 @@ public:
 
   Mesh(Renderer &renderer, int *nextRenderingId, MaterialData material, const std::vector<Vertex> &vertices, const std::vector<uint32_t> &indices);
   void initGraphics(Renderer &renderer, std::string texturePath);
-  void draw(Renderer *renderer, int currentFrame, glm::mat4 transformation, glm::mat4 view, glm::mat4 projectionMatrix, VkCommandBuffer commandBuffer);
+  void draw(Renderer *renderer, int currentFrame, glm::mat4 transformation, glm::mat4 view, glm::mat4 projectionMatrix, VkCommandBuffer commandBuffer, int colorStageID);
   void cleanup(VkDevice device, Renderer &renderer);
 };

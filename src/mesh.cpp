@@ -29,7 +29,7 @@ void Mesh::initGraphics(Renderer &renderer, std::string texturePath)
   renderer.descriptorManager.addDescriptorSets(renderer.deviceManager.device, renderer.MAX_FRAMES_IN_FLIGHT, 1, textureManager.textureImageView, textureManager.textureSampler);
 }
 
-void Mesh::draw(Renderer *renderer, int currentFrame, glm::mat4 transformation, glm::mat4 view, glm::mat4 projectionMatrix, VkCommandBuffer commandBuffer)
+void Mesh::draw(Renderer *renderer, int currentFrame, glm::mat4 transformation, glm::mat4 view, glm::mat4 projectionMatrix, VkCommandBuffer commandBuffer, int colorStageID)
 {
 
   VkBuffer vertexBuffersArray[] = {renderer->bufferManager.vertexBuffers[id]};
@@ -38,17 +38,41 @@ void Mesh::draw(Renderer *renderer, int currentFrame, glm::mat4 transformation, 
 
   vkCmdBindIndexBuffer(commandBuffer, renderer->bufferManager.indexBuffers[id], 0, VK_INDEX_TYPE_UINT32);
 
-  vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderer->pipelineManager.pipelineLayout, 0, 1, &renderer->descriptorManager.descriptorSets[currentFrame + id * renderer->MAX_FRAMES_IN_FLIGHT], 0, nullptr);
+  if (colorStageID == -1)
+  {
+    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderer->pipelineManager.pipelineLayout, 0, 1, &renderer->descriptorManager.descriptorSets[currentFrame + id * renderer->MAX_FRAMES_IN_FLIGHT], 0, nullptr);
 
-  renderer->bufferManager.updateUniformBuffer(currentFrame + id * renderer->MAX_FRAMES_IN_FLIGHT, transformation, view, projectionMatrix);
+    renderer->bufferManager.updateUniformBuffer(currentFrame + id * renderer->MAX_FRAMES_IN_FLIGHT, transformation, view, projectionMatrix);
 
-  vkCmdPushConstants(
-      commandBuffer,
-      renderer->pipelineManager.pipelineLayout,
-      VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-      0,
-      sizeof(MaterialData),
-      &material);
+    vkCmdPushConstants(
+        commandBuffer,
+        renderer->pipelineManager.pipelineLayout,
+        VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+        0,
+        sizeof(MaterialData),
+        &material);
+  }
+  else
+  {
+    struct ColorIDPushConstant
+    {
+      int id;
+    };
+    ColorIDPushConstant pc;
+    pc.id = colorStageID;
+
+    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderer->pipelineManager.colorIDPipelineLayout, 0, 1, &renderer->descriptorManager.descriptorSets[currentFrame + id * renderer->MAX_FRAMES_IN_FLIGHT], 0, nullptr);
+
+    renderer->bufferManager.updateUniformBuffer(currentFrame + id * renderer->MAX_FRAMES_IN_FLIGHT, transformation, view, projectionMatrix);
+
+    vkCmdPushConstants(
+        commandBuffer,
+        renderer->pipelineManager.colorIDPipelineLayout,
+        VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+        0,
+        sizeof(ColorIDPushConstant),
+        &pc);
+  }
 
   vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 }

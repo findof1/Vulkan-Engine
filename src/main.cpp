@@ -58,7 +58,7 @@ int main()
     {
         engine.init("Game Engine", start, update);
         engine.useFreeCamMode(true);
-        engine.enableDebug();
+
         /*
         MaterialData ground;
         ground.diffuseColor = {0.5, 0.5, 0.5};

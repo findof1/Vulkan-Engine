@@ -7,10 +7,18 @@
 #include "ECSRegistry.hpp"
 #ifndef RENDER_COMMAND
 #define RENDER_COMMAND
+
+enum RenderStage
+{
+  MainRender,
+  ColorID, // for clicking and color picking
+};
+
 struct RenderCommand
 {
-  std::function<void(VkCommandBuffer)> execute;
+  std::function<void(VkCommandBuffer, RenderStage)> execute;
 };
+
 #endif
 struct Vertex;
 class VulkanDebugDrawer;

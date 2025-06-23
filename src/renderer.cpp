@@ -31,8 +31,11 @@ void Renderer::initVulkan()
   swapchainManager.createSwapChain(deviceManager.device, deviceManager.physicalDevice);
   swapchainManager.createImageViews(deviceManager.device);
   pipelineManager.createRenderPass(deviceManager.device, deviceManager.physicalDevice);
+  pipelineManager.createOffScreenRenderPass(deviceManager.device, deviceManager.physicalDevice);
+  pipelineManager.createColorIDRenderPass(deviceManager.device, deviceManager.physicalDevice);
   descriptorManager.createDescriptorSetLayout(deviceManager.device);
   pipelineManager.createGraphicsPipeline(deviceManager.device);
+  pipelineManager.createColorIDPipeline(deviceManager.device);
   pipelineManager.createComputePipeline(deviceManager.device);
   createCommandPool();
   swapchainManager.createDepthResources(deviceManager.device, deviceManager.physicalDevice, commandPool, graphicsQueue);
@@ -148,6 +151,100 @@ void Renderer::beginCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageI
   }
 }
 
+void Renderer::beginOffscreenRenderPass(VkCommandBuffer commandBuffer)
+{
+  VkImageMemoryBarrier barrier{};
+  barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+  barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  barrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  barrier.srcAccessMask = 0;
+  barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+  barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+  barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+  barrier.image = engineUI.offscreenImage;
+  barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+  barrier.subresourceRange.baseMipLevel = 0;
+  barrier.subresourceRange.levelCount = 1;
+  barrier.subresourceRange.baseArrayLayer = 0;
+  barrier.subresourceRange.layerCount = 1;
+
+  vkCmdPipelineBarrier(
+      commandBuffer,
+      VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+      VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+      0,
+      0, nullptr,
+      0, nullptr,
+      1, &barrier);
+
+  VkRenderPassBeginInfo renderPassInfo{};
+  renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+  renderPassInfo.renderPass = pipelineManager.offscreenRenderPass;
+  renderPassInfo.framebuffer = engineUI.offscreenFramebuffer;
+
+  VkExtent2D offscreenExtent;
+  offscreenExtent.width = engineUI.imageW;
+  offscreenExtent.height = engineUI.imageH;
+  renderPassInfo.renderArea.offset = {0, 0};
+  renderPassInfo.renderArea.extent = offscreenExtent;
+
+  VkClearValue clearValues[2];
+  clearValues[0].color = {0.0f, 0.0f, 0.0f, 1.0f};
+  clearValues[1].depthStencil = {1.0f, 0};
+
+  renderPassInfo.clearValueCount = 2;
+  renderPassInfo.pClearValues = clearValues;
+
+  vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+}
+
+void Renderer::beginColorIDRenderPass(VkCommandBuffer commandBuffer)
+{
+  VkImageMemoryBarrier barrier{};
+  barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+  barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  barrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  barrier.srcAccessMask = 0;
+  barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+  barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+  barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+  barrier.image = engineUI.colorIDImage;
+  barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+  barrier.subresourceRange.baseMipLevel = 0;
+  barrier.subresourceRange.levelCount = 1;
+  barrier.subresourceRange.baseArrayLayer = 0;
+  barrier.subresourceRange.layerCount = 1;
+
+  vkCmdPipelineBarrier(
+      commandBuffer,
+      VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+      VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+      0,
+      0, nullptr,
+      0, nullptr,
+      1, &barrier);
+
+  VkRenderPassBeginInfo renderPassInfo{};
+  renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+  renderPassInfo.renderPass = pipelineManager.colorIDRenderPass;
+  renderPassInfo.framebuffer = engineUI.colorIDFramebuffer;
+
+  VkExtent2D offscreenExtent;
+  offscreenExtent.width = engineUI.imageW;
+  offscreenExtent.height = engineUI.imageH;
+  renderPassInfo.renderArea.offset = {0, 0};
+  renderPassInfo.renderArea.extent = offscreenExtent;
+
+  VkClearValue clearValues[2];
+  clearValues[0].color = {0.0f, 0.0f, 0.0f, 1.0f};
+  clearValues[1].depthStencil = {1.0f, 0};
+
+  renderPassInfo.clearValueCount = 2;
+  renderPassInfo.pClearValues = clearValues;
+
+  vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+}
+
 void Renderer::beginRenderPass(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 {
   VkImageMemoryBarrier barrier = {};
@@ -198,16 +295,65 @@ void Renderer::endRenderPass(VkCommandBuffer commandBuffer)
 void Renderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 {
   beginCommandBuffer(commandBuffer, imageIndex);
-  beginRenderPass(commandBuffer, imageIndex);
+  beginOffscreenRenderPass(commandBuffer);
 
   for (const auto &cmd : renderQueue)
   {
-    cmd.execute(commandBuffer);
+    cmd.execute(commandBuffer, RenderStage::MainRender);
   }
 
+  endRenderPass(commandBuffer);
+
+  VkImageMemoryBarrier barrier{};
+  barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+  barrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+  barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+  barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+  barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+  barrier.image = engineUI.offscreenImage;
+  barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+  barrier.subresourceRange.baseMipLevel = 0;
+  barrier.subresourceRange.levelCount = 1;
+  barrier.subresourceRange.baseArrayLayer = 0;
+  barrier.subresourceRange.layerCount = 1;
+
+  vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+  beginColorIDRenderPass(commandBuffer);
+
+  for (const auto &cmd : renderQueue)
+  {
+    cmd.execute(commandBuffer, RenderStage::ColorID);
+  }
+
+  endRenderPass(commandBuffer);
+
+  VkImageMemoryBarrier readBarrier{};
+  readBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+  readBarrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  readBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+  readBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+  readBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+  readBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+  readBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+  readBarrier.image = engineUI.colorIDImage;
+  readBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+  readBarrier.subresourceRange.baseMipLevel = 0;
+  readBarrier.subresourceRange.levelCount = 1;
+  readBarrier.subresourceRange.baseArrayLayer = 0;
+  readBarrier.subresourceRange.layerCount = 1;
+
+  vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &readBarrier);
+
+  beginRenderPass(commandBuffer, imageIndex);
+
+  vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineManager.graphicsPipeline);
   ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
 
   endRenderPass(commandBuffer);
+
   endCommandBuffer(commandBuffer);
 }
 

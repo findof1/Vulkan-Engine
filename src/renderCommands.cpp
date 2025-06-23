@@ -25,6 +25,25 @@ void setupViewportScissor(Renderer *renderer, VkCommandBuffer commandBuffer)
   vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 }
 
+void setupViewportScissor(VkCommandBuffer commandBuffer, VkExtent2D extent)
+{
+  VkViewport viewport{};
+  viewport.x = 0.0f;
+  viewport.y = 0.0f;
+  viewport.width = static_cast<float>(extent.width);
+  viewport.height = static_cast<float>(extent.height);
+  viewport.minDepth = 0.0f;
+  viewport.maxDepth = 1.0f;
+
+  vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+  VkRect2D scissor{};
+  scissor.offset = {0, 0};
+  scissor.extent = extent;
+
+  vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+}
+
 void setTriangleTopology(Renderer *renderer, VkCommandBuffer commandBuffer)
 {
   if (!renderer->fpCmdSetPrimitiveTopology)
@@ -118,12 +137,30 @@ void disableDepthWrite(Renderer *renderer, VkCommandBuffer commandBuffer)
 RenderCommand makeGameObjectCommand(ECSRegistry &registry, Entity e, Renderer *renderer, int currentFrame, glm::mat4 view, glm::mat4 proj)
 {
   return {
-      [&registry, renderer, e, currentFrame, view, proj](VkCommandBuffer cmdBuf)
+      [&registry, renderer, e, currentFrame, view, proj](VkCommandBuffer cmdBuf, RenderStage renderStage)
       {
-        vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, renderer->pipelineManager.graphicsPipeline);
-        setTriangleTopology(renderer, cmdBuf);
-        enableDepthWrite(renderer, cmdBuf);
-        setupViewportScissor(renderer, cmdBuf);
+        if (renderStage == MainRender)
+        {
+          vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, renderer->pipelineManager.graphicsPipeline);
+          setTriangleTopology(renderer, cmdBuf);
+          enableDepthWrite(renderer, cmdBuf);
+
+          VkExtent2D offscreenExtent;
+          offscreenExtent.width = renderer->engineUI.imageW;
+          offscreenExtent.height = renderer->engineUI.imageH;
+          setupViewportScissor(cmdBuf, offscreenExtent);
+        }
+        else if (renderStage == ColorID)
+        {
+          vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, renderer->pipelineManager.colorIDPipeline);
+          setTriangleTopology(renderer, cmdBuf);
+          enableDepthWrite(renderer, cmdBuf);
+
+          VkExtent2D offscreenExtent;
+          offscreenExtent.width = renderer->engineUI.imageW;
+          offscreenExtent.height = renderer->engineUI.imageH;
+          setupViewportScissor(cmdBuf, offscreenExtent);
+        }
 
         auto meshIt = registry.meshes.find(e);
         if (meshIt == registry.meshes.end() || meshIt->second.hide)
@@ -149,7 +186,7 @@ RenderCommand makeGameObjectCommand(ECSRegistry &registry, Entity e, Renderer *r
 
         for (auto &mesh : meshComp.meshes)
         {
-          mesh.draw(renderer, currentFrame, transformation, view, proj, cmdBuf);
+          mesh.draw(renderer, currentFrame, transformation, view, proj, cmdBuf, renderStage == MainRender ? -1 : e);
         }
       }};
 }
@@ -157,12 +194,20 @@ RenderCommand makeGameObjectCommand(ECSRegistry &registry, Entity e, Renderer *r
 RenderCommand makeUICommand(UI *ui, Renderer *renderer, int currentFrame, glm::mat4 model, glm::mat4 ortho)
 {
   return {
-      [=](VkCommandBuffer cmdBuf)
+      [=](VkCommandBuffer cmdBuf, RenderStage renderStage)
       {
+        if (renderStage != MainRender)
+        {
+          return;
+        }
         vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, renderer->pipelineManager.graphicsPipeline);
         setTriangleTopology(renderer, cmdBuf);
         enableDepthWrite(renderer, cmdBuf);
-        setupViewportScissor(renderer, cmdBuf);
+
+        VkExtent2D offscreenExtent;
+        offscreenExtent.width = renderer->engineUI.imageW;
+        offscreenExtent.height = renderer->engineUI.imageH;
+        setupViewportScissor(cmdBuf, offscreenExtent);
         ui->draw(renderer, currentFrame, model, glm::mat4(1.0f), ortho, cmdBuf);
       }};
 }
@@ -170,8 +215,13 @@ RenderCommand makeUICommand(UI *ui, Renderer *renderer, int currentFrame, glm::m
 RenderCommand makeParticleCommand(ParticleEmitter *emitter, Renderer *renderer, int currentFrame, glm::mat4 view, glm::mat4 proj)
 {
   return {
-      [=](VkCommandBuffer cmdBuf)
+      [=](VkCommandBuffer cmdBuf, RenderStage renderStage)
       {
+        if (renderStage != MainRender)
+        {
+          return;
+        }
+
         vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, renderer->pipelineManager.graphicsParticlePipeline);
         setPointListTopology(renderer, cmdBuf);
         disableDepthWrite(renderer, cmdBuf);
@@ -183,14 +233,23 @@ RenderCommand makeParticleCommand(ParticleEmitter *emitter, Renderer *renderer, 
 RenderCommand makeDebugCommand(VulkanDebugDrawer *drawer, Renderer *renderer, const std::vector<Vertex> &lines, glm::mat4 view, glm::mat4 proj, int currentFrame)
 {
   return {
-      [=](VkCommandBuffer cmdBuf)
+      [=](VkCommandBuffer cmdBuf, RenderStage renderStage)
       {
+        if (renderStage != MainRender)
+        {
+          return;
+        }
+
         if (drawer)
         {
           vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, renderer->pipelineManager.graphicsPipeline);
           setLineListTopology(renderer, cmdBuf);
           enableDepthWrite(renderer, cmdBuf);
-          setupViewportScissor(renderer, cmdBuf);
+
+          VkExtent2D offscreenExtent;
+          offscreenExtent.width = renderer->engineUI.imageW;
+          offscreenExtent.height = renderer->engineUI.imageH;
+          setupViewportScissor(cmdBuf, offscreenExtent);
           drawer->drawDebugLines(cmdBuf, lines, view, proj, currentFrame);
         }
       }};

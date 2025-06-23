@@ -1,6 +1,7 @@
 #include "debugDrawer.hpp"
 #include "renderer.hpp"
 #include <glm/glm.hpp>
+#include "mesh.hpp"
 
 void VulkanDebugDrawer::drawDebugLines(VkCommandBuffer commandBuffer, const std::vector<Vertex> &lines, glm::mat4 viewMatrix, glm::mat4 projectionMatrix, int currentFrame)
 {
@@ -41,20 +42,17 @@ void VulkanDebugDrawer::drawDebugLines(VkCommandBuffer commandBuffer, const std:
 
   renderer.bufferManager.updateUniformBuffer(currentFrame + buffersIndex * renderer.MAX_FRAMES_IN_FLIGHT, glm::mat4(1), viewMatrix, projectionMatrix);
 
-  struct MaterialPushConstants
-  {
-    glm::vec3 diffuseColor;
-    int hasTexture;
-  } materialData = {
-      glm::vec3(0),
-      false};
+  MaterialData materialData;
+  materialData.diffuseColor = glm::vec3(0);
+  materialData.hasTexture = false;
+  materialData.isParticle = false;
 
   vkCmdPushConstants(
       commandBuffer,
       renderer.pipelineManager.pipelineLayout,
       VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
       0,
-      sizeof(MaterialPushConstants),
+      sizeof(MaterialData),
       &materialData);
 
   vkCmdDraw(commandBuffer, transformedLines.size(), 1, 0, 0);

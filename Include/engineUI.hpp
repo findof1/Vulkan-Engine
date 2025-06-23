@@ -10,9 +10,38 @@ class EngineUI
 public:
   VkDescriptorPool descriptorPool;
 
+  VkImage offscreenImage;
+  VkImageView offscreenImageView;
+  VkDeviceMemory offscreenImageMemory;
+
+  VkImage offscreenDepthImage;
+  VkDeviceMemory offscreenDepthImageMemory;
+  VkImageView offscreenDepthImageView;
+
+  VkFramebuffer offscreenFramebuffer;
+
+  VkImage colorIDImage;
+  VkImageView colorIDImageView;
+  VkDeviceMemory colorIDImageMemory;
+
+  VkImage colorIDDepthImage;
+  VkDeviceMemory colorIDDepthImageMemory;
+  VkImageView colorIDDepthImageView;
+
+  VkFramebuffer colorIDFramebuffer;
+
+  VkSampler offscreenSampler;
+  ImTextureID offscreenImageId;
+  int imageW = 1100;
+  int imageH = 800;
+
   void createImGUIDescriptorPool(VkDevice device);
 
   void initImGui(Renderer *renderer);
 
   void render(Renderer *renderer);
+
+  void initOffscreenResources(Renderer *renderer);
+  void initColorIDResources(Renderer *renderer);
+  uint32_t readColorIDPixel(Renderer *renderer, int px, int py);
 };

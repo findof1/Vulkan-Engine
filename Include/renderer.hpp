@@ -35,10 +35,18 @@ class UI;
 
 #ifndef RENDER_COMMAND
 #define RENDER_COMMAND
+
+enum RenderStage
+{
+  MainRender,
+  ColorID, // for clicking and color picking
+};
+
 struct RenderCommand
 {
-  std::function<void(VkCommandBuffer)> execute;
+  std::function<void(VkCommandBuffer, RenderStage)> execute;
 };
+
 #endif
 
 class Renderer
@@ -124,6 +132,8 @@ private:
   void recordComputeCommandBuffer(VkCommandBuffer commandBuffer, uint32_t currentFrame);
 
   void beginCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+  void beginOffscreenRenderPass(VkCommandBuffer commandBuffer);
+  void beginColorIDRenderPass(VkCommandBuffer commandBuffer);
   void beginRenderPass(VkCommandBuffer commandBuffer, uint32_t imageIndex);
   void endCommandBuffer(VkCommandBuffer commandBuffer);
   void endRenderPass(VkCommandBuffer commandBuffer);

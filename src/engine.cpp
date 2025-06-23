@@ -51,6 +51,7 @@ void Engine::init(std::string windowName, std::function<void(Engine *)> startFn,
   particleEmitters.emplace_back(renderer, &nextRenderingId, 512, glm::vec3(-1000));
   particleEmitters.at(0).hide = true;
   renderer.engineUI.initImGui(&renderer);
+  physics.debugDrawer = new VulkanDebugDrawer(renderer, nextRenderingId, true);
 }
 
 void Engine::run()
@@ -91,10 +92,8 @@ void Engine::run()
 
     updateBoxColliders();
 
-    if (physics.debugDrawer)
-    {
-      physics.debugDrawer->clearLines();
-    }
+    physics.debugDrawer->clearLines();
+
     physics.update(deltaTime);
     render();
 
@@ -192,25 +191,60 @@ void Engine::render()
       renderer.renderQueue.push_back(makeParticleCommand(&emitter, &renderer, renderer.getCurrentFrame(), view, proj));
   }
 
-  if (physics.debugDrawer)
-    renderer.renderQueue.push_back(makeDebugCommand(physics.debugDrawer, &renderer, physics.debugDrawer->debugLines, view, proj, renderer.getCurrentFrame()));
+  renderer.renderQueue.push_back(makeDebugCommand(physics.debugDrawer, &renderer, physics.debugDrawer->debugLines, view, proj, renderer.getCurrentFrame()));
 
   ImGui_ImplVulkan_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
 
-  ImGui::Begin("Hello Vulkan + ImGui");
-  ImGui::Text("This is a example.");
+  ImGui::Begin("Hierarchy");
+
+  static std::string selectedKey;
+
+  if (ImGui::BeginTable("Game Objects", 1, ImGuiTableFlags_Borders))
+  {
+    for (const auto &[key, entity] : registry.entities)
+    {
+      ImGui::TableNextRow();
+      ImGui::TableNextColumn();
+
+      bool isSelected = (selectedKey == key);
+      if (ImGui::Selectable(key.c_str(), isSelected))
+      {
+        selectedKey = key;
+      }
+    }
+    ImGui::EndTable();
+  }
+
+  ImGui::End();
+
+  ImGui::SetNextWindowSize(ImVec2(1100, 800));
+  ImGui::Begin("Viewport");
+  ImGui::Image(renderer.engineUI.offscreenImageId, ImVec2(renderer.engineUI.imageW, renderer.engineUI.imageH));
+
+  ImVec2 imageMin = ImGui::GetItemRectMin();
+  ImVec2 imageMax = ImGui::GetItemRectMax();
+
+  ImVec2 mousePos = ImGui::GetMousePos();
+
+  bool insideImage = (mousePos.x >= imageMin.x && mousePos.x < imageMax.x &&
+                      mousePos.y >= imageMin.y && mousePos.y < imageMax.y);
+
+  int px = static_cast<int>(mousePos.x - imageMin.x);
+  int py = static_cast<int>(mousePos.y - imageMin.y);
+
+  if (insideImage && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+  {
+    uint32_t pickedColorID = renderer.engineUI.readColorIDPixel(&renderer, px, py);
+    if (pickedColorID < registry.getNextEntity())
+      registry.selected = pickedColorID;
+  }
+
   ImGui::End();
 
   ImGui::Render();
-
   renderer.drawFrame();
-}
-
-void Engine::enableDebug()
-{
-  physics.debugDrawer = new VulkanDebugDrawer(renderer, nextRenderingId, true);
 }
 
 void Engine::updateFreeCam(float dt)

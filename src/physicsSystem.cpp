@@ -172,7 +172,14 @@ void PhysicsSystem::update(float deltaTime)
 
   for (auto it1 = boxColliders.begin(); it1 != boxColliders.end(); ++it1)
   {
-    drawAABB(it1->second, glm::vec3(1.0f, 0.0f, 0.0f));
+    if (it1->first == registry.selected)
+    {
+      drawAABB(it1->second, glm::vec3(1.f));
+    }
+    else
+    {
+      drawAABB(it1->second, glm::vec3(0.2f));
+    }
 
     auto it2 = it1;
     ++it2;

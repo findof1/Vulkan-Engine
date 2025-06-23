@@ -34,7 +34,6 @@ public:
   void shutdown();
 
   void render();
-  void enableDebug();
 
   void clearHierarchy();
 

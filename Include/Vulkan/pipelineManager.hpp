@@ -11,9 +11,15 @@ class PipelineManager
 {
 public:
   VkRenderPass renderPass;
+  VkRenderPass offscreenRenderPass;
+  VkRenderPass colorIDRenderPass;
+
   VkPipelineLayout pipelineLayout;
   VkPipeline graphicsPipeline;
   VkPipeline graphicsParticlePipeline;
+
+  VkPipelineLayout colorIDPipelineLayout;
+  VkPipeline colorIDPipeline;
 
   VkPipelineLayout computePipelineLayout;
   VkPipeline computePipeline;
@@ -29,8 +35,11 @@ public:
   ~PipelineManager()
   {
   }
+  void createOffScreenRenderPass(VkDevice device, VkPhysicalDevice physicalDevice);
   void createRenderPass(VkDevice device, VkPhysicalDevice physicalDevice);
+  void createColorIDRenderPass(VkDevice device, VkPhysicalDevice physicalDevice);
   void createGraphicsPipeline(VkDevice device);
+  void createColorIDPipeline(VkDevice device);
   void createComputePipeline(VkDevice device);
   void cleanup(VkDevice device);
 
