@@ -27,7 +27,9 @@ public:
 
   Entity getEntity(std::string name)
   {
-    return entities.at(name);
+    if (entities.find(name) != entities.end())
+      return entities.at(name);
+    return -1;
   }
 
   void resetNextEntity()

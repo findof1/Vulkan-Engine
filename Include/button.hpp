@@ -20,14 +20,14 @@ public:
 
   Text *buttonText;
   glm::vec3 scale = glm::vec3(1);
-  
+
   std::function<void(void)> callback = []() {};
 
   Button(Renderer &renderer, int *nextRenderingId, const std::string &label, glm::vec3 position, std::array<glm::vec2, 2> verticesOffsets, std::string texture = "models/couch/diffuse.png");
   void initGraphics(Renderer &renderer) override;
   void initGraphics(Renderer &renderer, std::string texture);
   void draw(Renderer *renderer, int currentFrame, glm::mat4 transformation, glm::mat4 view, glm::mat4 projectionMatrix, VkCommandBuffer commandBuffer) override;
-  void updateState(float mouseX, float mouseY, bool mousePressed);
+  void updateState(float mouseX, float mouseY, bool mousePressed, ImVec2 sceneMin, ImVec2 sceneMax, float screenW, float screenH);
   void cleanup(VkDevice device, Renderer &renderer) override;
 
 private:

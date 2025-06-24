@@ -69,10 +69,30 @@ void Button::draw(Renderer *renderer, int currentFrame, glm::mat4 transformation
   buttonText->draw(renderer, currentFrame, transformation, view, projectionMatrix, commandBuffer);
 }
 
-void Button::updateState(float mouseX, float mouseY, bool mousePressed)
+void Button::updateState(float mouseX, float mouseY, bool mousePressed, ImVec2 sceneMin, ImVec2 sceneMax, float screenW, float screenH)
 {
   bool canClick = isHovered && !isPressed;
-  isHovered = (mouseX > position.x + verticesOffsets[0].x && mouseX < position.x + verticesOffsets[1].x && mouseY < abs(position.y + verticesOffsets[0].y) && mouseY > abs(position.y + verticesOffsets[1].y));
+
+  ImVec2 imageSize = {sceneMax.x - sceneMin.x, sceneMax.y - sceneMin.y};
+
+  ImVec2 mouse = ImGui::GetMousePos();
+  bool insideImage = (mouse.x >= sceneMin.x && mouse.x <= sceneMax.x &&
+                      mouse.y >= sceneMin.y && mouse.y <= sceneMax.y);
+
+  if (insideImage)
+  {
+    float minX = ((position.x + verticesOffsets[0].x) / screenW) * imageSize.x + sceneMin.x;
+    float maxX = ((position.x + verticesOffsets[1].x) / screenW) * imageSize.x + sceneMin.x;
+    float minY = abs(((position.y + verticesOffsets[0].y) / screenH) * imageSize.y) + sceneMin.y;
+    float maxY = abs(((position.y + verticesOffsets[1].y) / screenH) * imageSize.y) + sceneMin.y;
+
+    isHovered = (mouseX > minX && mouseX < maxX && mouseY < abs(minY) && mouseY > abs(maxY));
+  }
+  else
+  {
+    isHovered = false;
+  }
+
   isPressed = isHovered && mousePressed;
 
   if (isPressed)

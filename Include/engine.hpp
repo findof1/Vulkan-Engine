@@ -82,6 +82,8 @@ public:
   void addTransformComponent(Entity entity, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale);
   void addBoxColliderComponent(Entity entity, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale);
   void addBoxColliderComponent(Entity entity);
+  void updateBoxCollider(Entity entity, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale);
+  void updateBoxCollider(Entity entity);
   void addRigidBodyComponent(Entity entity);
   void setRigidBodyComponentStatic(Entity entity, bool isStatic);
   void removeRigidBodyComponent(Entity entity);
@@ -91,7 +93,11 @@ public:
   Entity createEmptyGameObject(std::string name);
   Entity getGameObjectHandle(std::string name);
   TransformComponent &getTransformComponent(Entity entity);
+  TransformComponent &getTransformComponentNoUpdate(Entity entity);
   const TransformComponent &getConstTransformComponent(Entity entity);
+  BoxColliderComponent &getBoxColliderComponent(Entity entity);
+  BoxColliderComponent &getBoxColliderComponentNoUpdate(Entity entity);
+  RigidBodyComponent &getRigidBodyComponent(Entity entity);
 
   void serializeScene(const std::string &filePath);
   void deserializeScene(const std::string &filePath);

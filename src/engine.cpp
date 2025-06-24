@@ -86,7 +86,7 @@ void Engine::run()
           pressed = true;
         }
 
-        btn->updateState(xpos, ypos, pressed);
+        btn->updateState(xpos, ypos, pressed, renderer.engineUI.sceneMin, renderer.engineUI.sceneMax, renderer.WIDTH, renderer.HEIGHT);
       }
     }
 
@@ -193,57 +193,8 @@ void Engine::render()
 
   renderer.renderQueue.push_back(makeDebugCommand(physics.debugDrawer, &renderer, physics.debugDrawer->debugLines, view, proj, renderer.getCurrentFrame()));
 
-  ImGui_ImplVulkan_NewFrame();
-  ImGui_ImplGlfw_NewFrame();
-  ImGui::NewFrame();
+  renderer.engineUI.renderImGUI(this, &renderer);
 
-  ImGui::Begin("Hierarchy");
-
-  static std::string selectedKey;
-
-  if (ImGui::BeginTable("Game Objects", 1, ImGuiTableFlags_Borders))
-  {
-    for (const auto &[key, entity] : registry.entities)
-    {
-      ImGui::TableNextRow();
-      ImGui::TableNextColumn();
-
-      bool isSelected = (selectedKey == key);
-      if (ImGui::Selectable(key.c_str(), isSelected))
-      {
-        selectedKey = key;
-      }
-    }
-    ImGui::EndTable();
-  }
-
-  ImGui::End();
-
-  ImGui::SetNextWindowSize(ImVec2(1100, 800));
-  ImGui::Begin("Viewport");
-  ImGui::Image(renderer.engineUI.offscreenImageId, ImVec2(renderer.engineUI.imageW, renderer.engineUI.imageH));
-
-  ImVec2 imageMin = ImGui::GetItemRectMin();
-  ImVec2 imageMax = ImGui::GetItemRectMax();
-
-  ImVec2 mousePos = ImGui::GetMousePos();
-
-  bool insideImage = (mousePos.x >= imageMin.x && mousePos.x < imageMax.x &&
-                      mousePos.y >= imageMin.y && mousePos.y < imageMax.y);
-
-  int px = static_cast<int>(mousePos.x - imageMin.x);
-  int py = static_cast<int>(mousePos.y - imageMin.y);
-
-  if (insideImage && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
-  {
-    uint32_t pickedColorID = renderer.engineUI.readColorIDPixel(&renderer, px, py);
-    if (pickedColorID < registry.getNextEntity())
-      registry.selected = pickedColorID;
-  }
-
-  ImGui::End();
-
-  ImGui::Render();
   renderer.drawFrame();
 }
 
@@ -541,9 +492,30 @@ TransformComponent &Engine::getTransformComponent(Entity entity)
   return registry.transforms[entity];
 }
 
+TransformComponent &Engine::getTransformComponentNoUpdate(Entity entity)
+{
+  return registry.transforms[entity];
+}
+
 const TransformComponent &Engine::getConstTransformComponent(Entity entity)
 {
   return registry.transforms[entity];
+}
+
+BoxColliderComponent &Engine::getBoxColliderComponent(Entity entity)
+{
+  registry.boxColliders[entity].justUpdated = true;
+  return registry.boxColliders[entity];
+}
+
+BoxColliderComponent &Engine::getBoxColliderComponentNoUpdate(Entity entity)
+{
+  return registry.boxColliders[entity];
+}
+
+RigidBodyComponent &Engine::getRigidBodyComponent(Entity entity)
+{
+  return registry.rigidBodies[entity];
 }
 
 void Engine::addTransformComponent(Entity entity, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale)
@@ -576,6 +548,25 @@ void Engine::addBoxColliderComponent(Entity entity)
   TransformComponent &transform = getTransformComponent(entity);
   boxCollider.updateWorldAABB(transform.position, transform.rotationZYX, transform.scale);
   boxCollider.autoUpdate = true;
+}
+
+void Engine::updateBoxCollider(Entity entity, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale)
+{
+  if (registry.boxColliders.find(entity) == registry.boxColliders.end())
+    return;
+
+  BoxColliderComponent &boxCollider = registry.boxColliders[entity];
+  boxCollider.updateWorldAABB(position, rotation, scale);
+}
+
+void Engine::updateBoxCollider(Entity entity)
+{
+  if (registry.boxColliders.find(entity) == registry.boxColliders.end() || registry.transforms.find(entity) == registry.transforms.end())
+    return;
+
+  BoxColliderComponent &boxCollider = registry.boxColliders[entity];
+  TransformComponent &transform = getTransformComponent(entity);
+  boxCollider.updateWorldAABB(transform.position, transform.rotationZYX, transform.scale);
 }
 
 Entity Engine::createEmptyGameObject(std::string name)

@@ -5,6 +5,7 @@
 #include <imgui_impl_vulkan.h>
 #include <imgui_impl_glfw.h>
 class Renderer;
+class Engine;
 class EngineUI
 {
 public:
@@ -35,6 +36,9 @@ public:
   int imageW = 1100;
   int imageH = 800;
 
+  ImVec2 sceneMin;
+  ImVec2 sceneMax;
+
   void createImGUIDescriptorPool(VkDevice device);
 
   void initImGui(Renderer *renderer);
@@ -44,4 +48,5 @@ public:
   void initOffscreenResources(Renderer *renderer);
   void initColorIDResources(Renderer *renderer);
   uint32_t readColorIDPixel(Renderer *renderer, int px, int py);
+  void renderImGUI(Engine *engine, Renderer *renderer);
 };

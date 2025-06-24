@@ -1,6 +1,7 @@
 #include "engineUI.hpp"
 #include "renderer.hpp"
 #include <utils.h>
+#include "engine.hpp"
 
 void EngineUI::createImGUIDescriptorPool(VkDevice device)
 {
@@ -299,4 +300,112 @@ uint32_t EngineUI::readColorIDPixel(Renderer *renderer, int px, int py)
   int objectID = (b << 16) | (g << 8) | r;
 
   return objectID;
+}
+
+void EngineUI::renderImGUI(Engine *engine, Renderer *renderer)
+{
+  ImGui_ImplVulkan_NewFrame();
+  ImGui_ImplGlfw_NewFrame();
+  ImGui::NewFrame();
+
+  Entity *selected = &engine->registry.selected;
+
+  ImGui::Begin("Hierarchy");
+
+  if (ImGui::BeginTable("Game Objects", 1, ImGuiTableFlags_Borders))
+  {
+    for (const auto &[key, entity] : engine->registry.entities)
+    {
+      ImGui::TableNextRow();
+      ImGui::TableNextColumn();
+
+      bool isSelected = (*selected == entity);
+      if (ImGui::Selectable(key.c_str(), isSelected))
+      {
+        *selected = entity;
+      }
+    }
+    ImGui::EndTable();
+  }
+
+  ImGui::End();
+
+  ImGui::Begin("Inspector");
+  if (*selected != -1)
+  {
+    if (engine->registry.transforms.find(*selected) != engine->registry.transforms.end())
+    {
+      ImGui::Text("Transform");
+
+      TransformComponent &transform = engine->getTransformComponentNoUpdate(*selected);
+      bool updated = false;
+      updated |= ImGui::DragFloat3("Position", &transform.position.x, 0.1f);
+      updated |= ImGui::DragFloat3("Rotation", &transform.rotationZYX.x, 0.1f);
+      updated |= ImGui::DragFloat3("Scale", &transform.scale.x, 0.1f);
+      if (updated)
+      {
+        transform.justUpdated = true;
+      }
+    }
+    if (engine->registry.boxColliders.find(*selected) != engine->registry.boxColliders.end())
+    {
+      ImGui::Text("Box Collider");
+
+      BoxColliderComponent &boxCollider = engine->getBoxColliderComponentNoUpdate(*selected);
+      bool updated = false;
+      updated |= ImGui::DragFloat3("Local Min", &boxCollider.localMin.x, 0.1f);
+      updated |= ImGui::DragFloat3("Local Max", &boxCollider.localMax.x, 0.1f);
+      updated |= ImGui::Checkbox("Auto Update To Transform", &boxCollider.autoUpdate);
+      if (!boxCollider.autoUpdate)
+      {
+        updated |= ImGui::DragFloat3("Position", &boxCollider.position.x, 0.1f);
+        updated |= ImGui::DragFloat3("Rotation", &boxCollider.rotationZYX.x, 0.1f);
+        updated |= ImGui::DragFloat3("Scale", &boxCollider.scale.x, 0.1f);
+        boxCollider.updateWorldAABB(boxCollider.position, boxCollider.rotationZYX, boxCollider.scale);
+      }
+      if (updated)
+      {
+        boxCollider.justUpdated = true;
+      }
+    }
+    if (engine->registry.rigidBodies.find(*selected) != engine->registry.rigidBodies.end())
+    {
+      ImGui::Text("Rigid Body");
+
+      RigidBodyComponent &rigidBody = engine->getRigidBodyComponent(*selected);
+      bool updated = false;
+      updated |= ImGui::DragFloat("Mass", &rigidBody.mass, 0.1f);
+      updated |= ImGui::Checkbox("Is Static", &rigidBody.isStatic);
+      updated |= ImGui::Checkbox("Use Gravity", &rigidBody.useGravity);
+    }
+  }
+  ImGui::End();
+
+  ImGui::SetNextWindowSize(ImVec2(1200, 900));
+  ImGui::Begin("Viewport");
+  ImGui::Image(offscreenImageId, ImVec2(imageW, imageH));
+
+  ImVec2 imageMin = ImGui::GetItemRectMin();
+  ImVec2 imageMax = ImGui::GetItemRectMax();
+  sceneMin = imageMin;
+  sceneMax = imageMax;
+
+  ImVec2 mousePos = ImGui::GetMousePos();
+
+  bool insideImage = (mousePos.x >= imageMin.x && mousePos.x < imageMax.x &&
+                      mousePos.y >= imageMin.y && mousePos.y < imageMax.y);
+
+  int px = static_cast<int>(mousePos.x - imageMin.x);
+  int py = static_cast<int>(mousePos.y - imageMin.y);
+
+  if (insideImage && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+  {
+    uint32_t pickedColorID = readColorIDPixel(renderer, px, py);
+    if (pickedColorID < engine->registry.getNextEntity())
+      *selected = pickedColorID;
+  }
+
+  ImGui::End();
+
+  ImGui::Render();
 }

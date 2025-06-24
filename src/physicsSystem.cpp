@@ -2,6 +2,7 @@
 #include "ECSRegistry.hpp"
 #include "debugDrawer.hpp"
 #include <algorithm>
+#include <unordered_set>
 
 bool PhysicsSystem::SATCollision(Entity entityA, Entity entityB, const BoxColliderComponent &a, const BoxColliderComponent &b, glm::vec3 &mtv, glm::vec3 &collisionNormal)
 {
@@ -169,6 +170,7 @@ void PhysicsSystem::update(float deltaTime)
   }
 
   auto &boxColliders = registry.boxColliders;
+  std::unordered_set<Entity> updatedEntities;
 
   for (auto it1 = boxColliders.begin(); it1 != boxColliders.end(); ++it1)
   {
@@ -176,7 +178,7 @@ void PhysicsSystem::update(float deltaTime)
     {
       drawAABB(it1->second, glm::vec3(1.f));
     }
-    else
+    else if (doDebugDraw)
     {
       drawAABB(it1->second, glm::vec3(0.2f));
     }
@@ -187,18 +189,20 @@ void PhysicsSystem::update(float deltaTime)
     {
       if (it1->second.justUpdated == false && it2->second.justUpdated == false)
         continue;
-      it1->second.justUpdated = false;
-      it2->second.justUpdated = false;
-
       glm::vec3 mtv;
       glm::vec3 collisionNormal;
       if (AABBOverlap(it1->second, it2->second) && SATCollision(it1->first, it2->first, it1->second, it2->second, mtv, collisionNormal))
       {
-        it1->second.justUpdated = true;
-        it2->second.justUpdated = true;
+        updatedEntities.insert(it1->first);
+        updatedEntities.insert(it2->first);
         resolveCollision(it1->first, it2->first, it1->second, it2->second, mtv, collisionNormal);
       }
     }
+  }
+
+  for (auto &[entity, collider] : boxColliders)
+  {
+    collider.justUpdated = updatedEntities.find(entity) != updatedEntities.end();
   }
 }
 
