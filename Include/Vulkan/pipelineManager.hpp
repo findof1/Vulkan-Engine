@@ -15,7 +15,9 @@ public:
   VkRenderPass colorIDRenderPass;
 
   VkPipelineLayout pipelineLayout;
+  VkPipelineLayout animPipelineLayout;
   VkPipeline graphicsPipeline;
+  VkPipeline animationPipeline;
   VkPipeline graphicsParticlePipeline;
 
   VkPipelineLayout colorIDPipelineLayout;

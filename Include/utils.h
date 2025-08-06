@@ -37,6 +37,11 @@ struct UniformBufferObject
   alignas(16) glm::mat4 proj;
 };
 
+struct AnimatedUniformBufferObject
+{
+  alignas(16) glm::mat4 boneMatrices[100];
+};
+
 QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface);
 VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, VkDevice device);
 

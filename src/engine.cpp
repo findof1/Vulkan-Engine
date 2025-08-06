@@ -12,6 +12,9 @@
 #include <imgui_impl_vulkan.h>
 #include <imgui_impl_glfw.h>
 #include <imgui.h>
+#include "tiny_gltf.h"
+#include "json.hpp"
+#include <glm/gtc/type_ptr.hpp>
 
 void Engine::initWindow(std::string windowName)
 {
@@ -179,6 +182,11 @@ void Engine::render()
     renderer.renderQueue.push_back(makeGameObjectCommand(registry, e, &renderer, renderer.getCurrentFrame(), view, proj));
   }
 
+  for (auto &[e, _] : registry.animatedMeshes)
+  {
+    renderer.renderQueue.push_back(makeGameObjectCommand(registry, e, &renderer, renderer.getCurrentFrame(), view, proj));
+  }
+
   for (auto &[_, element] : UIElements)
   {
     glm::mat4 model = glm::translate(glm::mat4(1.0f), element->position);
@@ -266,6 +274,15 @@ void Engine::addEmptyMeshComponent(Entity entity)
   registry.meshes.emplace(entity, std::move(meshComp));
 }
 
+void Engine::addEmptyAnimatedMeshComponent(Entity entity)
+{
+  if (registry.animatedMeshes.find(entity) != registry.animatedMeshes.end())
+    return;
+
+  AnimatedMeshComponent meshComp;
+  registry.animatedMeshes.emplace(entity, std::move(meshComp));
+}
+
 void Engine::addMeshComponent(Entity entity, MaterialData material, const std::string &texturePath, const std::vector<Vertex> &vertices, const std::vector<uint32_t> &indices)
 {
   if (registry.meshes.find(entity) != registry.meshes.end())
@@ -292,6 +309,407 @@ void Engine::addMeshToComponent(Entity entity, MaterialData material, const std:
   Mesh mesh(renderer, &nextRenderingId, material, vertices, indices);
   mesh.initGraphics(renderer, texturePath.empty() ? "models/couch/diffuse.png" : texturePath);
   meshComp.meshes.emplace_back(std::move(mesh));
+}
+
+void Engine::addAnimatedMeshToComponent(Entity entity, MaterialData material, const std::string &texturePath, const std::vector<AnimatedVertex> &vertices, const std::vector<uint32_t> &indices)
+{
+  if (registry.animatedMeshes.find(entity) == registry.animatedMeshes.end())
+    return;
+
+  AnimatedMeshComponent &meshComp = registry.animatedMeshes.at(entity);
+
+  AnimatedMesh mesh(renderer, &nextRenderingId, material, vertices, indices);
+  mesh.initGraphics(renderer, texturePath.empty() ? "models/couch/diffuse.png" : texturePath);
+  meshComp.meshes.emplace_back(std::move(mesh));
+}
+
+void Engine::addSkeletonComponent(Entity entity, std::vector<glm::mat4> inverseBindMatrices, std::vector<int> jointNodeIndices, tinygltf::Model *model, const tinygltf::Node *node)
+{
+  if (registry.animationSkeletons.find(entity) != registry.animationSkeletons.end())
+    return;
+
+  SkeletonComponent skeleton;
+  skeleton.inverseBindMats = inverseBindMatrices;
+  skeleton.jointNodeIndices = jointNodeIndices;
+  skeleton.model = model;
+  skeleton.node = node;
+  registry.animationSkeletons.emplace(entity, std::move(skeleton));
+}
+
+void recordParentHierarchy(const tinygltf::Model *model, std::unordered_map<int, int> &nodeToParent, int nodeIndex, int parentIndex = -1)
+{
+  nodeToParent[nodeIndex] = parentIndex;
+
+  const tinygltf::Node &node = model->nodes[nodeIndex];
+  for (int child : node.children)
+  {
+    recordParentHierarchy(model, nodeToParent, child, nodeIndex);
+  }
+}
+
+void Engine::createAnimatedModelFromFile(std::string baseName, std::string path)
+{
+
+  tinygltf::Model &model = loadedModels[path];
+  tinygltf::TinyGLTF loader;
+  std::string err, warn;
+
+  if (!loader.LoadASCIIFromFile(&model, &err, &warn, path))
+  {
+    std::cerr << "Failed to load glTF: " << err << std::endl;
+    return;
+  }
+  if (!warn.empty())
+    std::cout << "Warn: " << warn << std::endl;
+  if (!err.empty())
+    std::cerr << "Err: " << err << std::endl;
+
+  std::cout << "Nodes: " << model.nodes.size() << std::endl;
+  std::cout << "Scenes: " << model.scenes.size() << std::endl;
+  std::cout << "Meshes: " << model.meshes.size() << std::endl;
+
+  int i = 0;
+
+  for (const auto &node : model.nodes)
+  {
+    Entity entity = registry.createEntity(baseName + "_" + std::to_string(i));
+    i++;
+
+    glm::vec3 position = glm::vec3(0.0f);
+    glm::quat rotation = glm::quat(1, 0, 0, 0);
+    glm::vec3 scale = glm::vec3(1.0f);
+
+    if (!node.translation.empty())
+      position = glm::make_vec3(node.translation.data());
+    if (!node.rotation.empty())
+      rotation = glm::make_quat(node.rotation.data());
+    if (!node.scale.empty())
+      scale = glm::make_vec3(node.scale.data());
+
+    glm::vec3 euler = glm::eulerAngles(rotation);
+
+    addTransformComponent(entity, position, euler, scale);
+
+    if (node.mesh >= 0)
+    {
+      addEmptyAnimatedMeshComponent(entity);
+      const tinygltf::Mesh &mesh = model.meshes[node.mesh];
+
+      for (const auto &primitive : mesh.primitives)
+      {
+        std::vector<AnimatedVertex> vertices;
+        std::vector<uint32_t> indices;
+        if (primitive.indices >= 0)
+        {
+          const tinygltf::Accessor &accessor = model.accessors[primitive.indices];
+          const tinygltf::BufferView &bufferView = model.bufferViews[accessor.bufferView];
+          const tinygltf::Buffer &buffer = model.buffers[bufferView.buffer];
+
+          const unsigned char *dataPtr = buffer.data.data() + bufferView.byteOffset + accessor.byteOffset;
+          size_t indexCount = accessor.count;
+
+          indices.resize(indexCount);
+
+          switch (accessor.componentType)
+          {
+          case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE:
+          {
+            const uint8_t *src = reinterpret_cast<const uint8_t *>(dataPtr);
+            for (size_t i = 0; i < indexCount; i++)
+              indices[i] = static_cast<uint32_t>(src[i]);
+            break;
+          }
+          case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT:
+          {
+            const uint16_t *src = reinterpret_cast<const uint16_t *>(dataPtr);
+            for (size_t i = 0; i < indexCount; i++)
+              indices[i] = static_cast<uint32_t>(src[i]);
+            break;
+          }
+          case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT:
+          {
+            const uint32_t *src = reinterpret_cast<const uint32_t *>(dataPtr);
+            for (size_t i = 0; i < indexCount; i++)
+              indices[i] = src[i];
+            break;
+          }
+          default:
+            std::cerr << "Unsupported index component type: " << accessor.componentType << "\n";
+            break;
+          }
+        }
+
+        if (primitive.attributes.find("POSITION") != primitive.attributes.end())
+        {
+          const tinygltf::Accessor &posAccessor = model.accessors[primitive.attributes.at("POSITION")];
+          size_t vertexCount = posAccessor.count;
+          vertices.resize(vertexCount);
+
+          const tinygltf::BufferView &bufferView = model.bufferViews[posAccessor.bufferView];
+          const tinygltf::Buffer &buffer = model.buffers[bufferView.buffer];
+          const float *posData = reinterpret_cast<const float *>(&(buffer.data[bufferView.byteOffset + posAccessor.byteOffset]));
+
+          const float *normalData = nullptr;
+          const float *texCoordData = nullptr;
+          const float *weightData = nullptr;
+          const unsigned char *jointIndexData = nullptr;
+
+          // a->accessor v->view b->buffer
+          if (primitive.attributes.count("NORMAL"))
+          {
+            const auto &a = model.accessors[primitive.attributes.at("NORMAL")];
+            const auto &v = model.bufferViews[a.bufferView];
+            const auto &b = model.buffers[v.buffer];
+            normalData = reinterpret_cast<const float *>(&b.data[v.byteOffset + a.byteOffset]);
+          }
+
+          if (primitive.attributes.count("TEXCOORD_0"))
+          {
+            const auto &a = model.accessors[primitive.attributes.at("TEXCOORD_0")];
+            const auto &v = model.bufferViews[a.bufferView];
+            const auto &b = model.buffers[v.buffer];
+            texCoordData = reinterpret_cast<const float *>(&b.data[v.byteOffset + a.byteOffset]);
+          }
+
+          if (primitive.attributes.count("WEIGHTS_0"))
+          {
+            const auto &a = model.accessors[primitive.attributes.at("WEIGHTS_0")];
+            const auto &v = model.bufferViews[a.bufferView];
+            const auto &b = model.buffers[v.buffer];
+            weightData = reinterpret_cast<const float *>(&b.data[v.byteOffset + a.byteOffset]);
+          }
+          else
+          {
+            std::cout << "This animation has no WEIGHTS: " << path << std::endl;
+            return;
+          }
+
+          int jointComponentSize = 0;
+          if (primitive.attributes.count("JOINTS_0"))
+          {
+            const auto &a = model.accessors[primitive.attributes.at("JOINTS_0")];
+            const auto &v = model.bufferViews[a.bufferView];
+            const auto &b = model.buffers[v.buffer];
+            const unsigned char *raw = &b.data[v.byteOffset + a.byteOffset];
+
+            size_t vertexCount = a.count;
+
+            if (a.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE)
+              jointComponentSize = sizeof(uint8_t);
+            else if (a.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT)
+              jointComponentSize = sizeof(uint16_t);
+            else
+            {
+              std::cerr << "Unsupported JOINTS_0 component type: " << a.componentType << "\n";
+              return;
+            }
+
+            jointIndexData = raw;
+          }
+          else
+          {
+            std::cout << "This animation has no JOINTS: " << path << std::endl;
+            return;
+          }
+
+          for (size_t i = 0; i < vertexCount; i++)
+          {
+            AnimatedVertex v{};
+            v.pos = glm::make_vec3(posData + i * 3);
+            v.color = texCoordData ? glm::vec3(-1.0f) : glm::vec3(1.0f);
+            v.normal = normalData ? glm::make_vec3(normalData + i * 3) : glm::vec3(0.0f);
+            v.texPos = texCoordData ? glm::make_vec2(texCoordData + i * 2) : glm::vec2(0.0f);
+
+            if (jointIndexData)
+            {
+              glm::uvec4 joints(0);
+              if (jointComponentSize == 1) // uint8_t
+              {
+                const uint8_t *j = reinterpret_cast<const uint8_t *>(jointIndexData + i * 4);
+                joints = glm::uvec4(j[0], j[1], j[2], j[3]);
+              }
+              else if (jointComponentSize == 2) // uint16_t
+              {
+                const uint16_t *j = reinterpret_cast<const uint16_t *>(jointIndexData + i * 4);
+                joints = glm::uvec4(j[0], j[1], j[2], j[3]);
+              }
+
+              for (int k = 0; k < 4; ++k)
+                if (joints[k] >= 100)
+                  joints[k] = 0;
+
+              v.jointIndices = joints;
+            }
+
+            if (weightData)
+            {
+              v.jointWeights = glm::make_vec4(weightData + i * 4);
+              float sum = glm::dot(v.jointWeights, glm::vec4(1.0f));
+              if (sum > 0.0f)
+                v.jointWeights /= sum;
+            }
+
+            vertices[i] = v;
+          }
+
+          MaterialData meshMaterial;
+          meshMaterial.hasTexture = false;
+          meshMaterial.diffuseColor = glm::vec3(1);
+          std::string textureName;
+
+          if (primitive.material >= 0)
+          {
+            const tinygltf::Material &material = model.materials[primitive.material];
+
+            if (material.pbrMetallicRoughness.baseColorTexture.index >= 0)
+            {
+              const tinygltf::Texture &texture = model.textures[material.pbrMetallicRoughness.baseColorTexture.index];
+
+              if (texture.source >= 0)
+              {
+                const tinygltf::Image &image = model.images[texture.source];
+
+                textureName = image.uri;
+              }
+            }
+          }
+
+          addAnimatedMeshToComponent(entity, meshMaterial, "models/couch/diffuse.png", vertices, indices);
+        }
+      }
+    }
+
+    if (node.skin >= 0)
+    {
+      const tinygltf::Skin &skin = model.skins[node.skin];
+
+      const std::vector<int> &joints = skin.joints;
+      size_t jointCount = joints.size();
+
+      std::vector<glm::mat4> inverseBindMatrices;
+
+      if (skin.inverseBindMatrices >= 0)
+      {
+        const tinygltf::Accessor &accessor = model.accessors[skin.inverseBindMatrices];
+        const tinygltf::BufferView &view = model.bufferViews[accessor.bufferView];
+        const tinygltf::Buffer &buffer = model.buffers[view.buffer];
+
+        const float *data = reinterpret_cast<const float *>(&buffer.data[view.byteOffset + accessor.byteOffset]);
+
+        for (size_t i = 0; i < accessor.count; i++)
+        {
+          glm::mat4 mat = glm::make_mat4(data + i * 16);
+          inverseBindMatrices.push_back(mat);
+        }
+      }
+      addSkeletonComponent(entity, inverseBindMatrices, joints, &model, &node);
+      SkeletonComponent &skeleton = registry.animationSkeletons.at(entity);
+      for (int rootNode : skeleton.model->scenes[skeleton.model->defaultScene].nodes)
+      {
+        recordParentHierarchy(skeleton.model, skeleton.nodeToParent, rootNode);
+      }
+
+      skeleton.nodeTransforms.resize(model.nodes.size());
+      for (size_t i = 0; i < model.nodes.size(); ++i)
+      {
+        const tinygltf::Node &node = model.nodes[i];
+        SkeletonComponent::NodeLocalTransform transform;
+
+        if (!node.translation.empty())
+        {
+          transform.translation = glm::vec3(
+              node.translation[0],
+              node.translation[1],
+              node.translation[2]);
+        }
+
+        if (!node.rotation.empty())
+        {
+          transform.rotation = glm::vec4(
+              node.rotation[3],
+              node.rotation[0],
+              node.rotation[1],
+              node.rotation[2]);
+        }
+
+        if (!node.scale.empty())
+        {
+          transform.scale = glm::vec3(
+              node.scale[0],
+              node.scale[1],
+              node.scale[2]);
+        }
+
+        skeleton.nodeTransforms[i] = transform;
+      }
+    }
+
+    if (!model.animations.empty())
+    {
+      AnimationComponent &animationComponent = registry.animationComponents[entity];
+
+      for (const tinygltf::Animation &gltfAnim : model.animations)
+      {
+        Animation animation;
+        animation.name = gltfAnim.name;
+
+        for (const tinygltf::AnimationSampler &gltfSampler : gltfAnim.samplers)
+        {
+          AnimationSampler sampler;
+
+          {
+            const tinygltf::Accessor &accessor = model.accessors[gltfSampler.input];
+            const tinygltf::BufferView &bufferView = model.bufferViews[accessor.bufferView];
+            const tinygltf::Buffer &buffer = model.buffers[bufferView.buffer];
+
+            const float *dataPtr = reinterpret_cast<const float *>(
+                &buffer.data[bufferView.byteOffset + accessor.byteOffset]);
+
+            sampler.inputTimes.assign(dataPtr, dataPtr + accessor.count);
+            if (!sampler.inputTimes.empty())
+              animation.duration = std::max(animation.duration, sampler.inputTimes.back());
+          }
+
+          {
+            const tinygltf::Accessor &accessor = model.accessors[gltfSampler.output];
+            const tinygltf::BufferView &bufferView = model.bufferViews[accessor.bufferView];
+            const tinygltf::Buffer &buffer = model.buffers[bufferView.buffer];
+
+            const float *dataPtr = reinterpret_cast<const float *>(
+                &buffer.data[bufferView.byteOffset + accessor.byteOffset]);
+
+            for (size_t i = 0; i < accessor.count; ++i)
+            {
+              glm::vec4 value(0.0f);
+              if (accessor.type == TINYGLTF_TYPE_VEC3)
+              {
+                value = glm::vec4(dataPtr[i * 3 + 0], dataPtr[i * 3 + 1], dataPtr[i * 3 + 2], 0.0f);
+              }
+              else if (accessor.type == TINYGLTF_TYPE_VEC4)
+              {
+                value = glm::vec4(dataPtr[i * 4 + 0], dataPtr[i * 4 + 1], dataPtr[i * 4 + 2], dataPtr[i * 4 + 3]);
+              }
+              sampler.outputValues.push_back(value);
+            }
+          }
+
+          sampler.interpolation = gltfSampler.interpolation;
+          animation.samplers.push_back(sampler);
+        }
+
+        for (const tinygltf::AnimationChannel &gltfChannel : gltfAnim.channels)
+        {
+          AnimationChannel channel;
+          channel.nodeIndex = gltfChannel.target_node;
+          channel.path = gltfChannel.target_path;
+          channel.samplerIndex = gltfChannel.sampler;
+          animation.channels.push_back(channel);
+        }
+
+        animationComponent.animations.push_back(animation);
+      }
+    }
+  }
 }
 
 void Engine::addMeshComponent(Entity entity, const std::string objPath, const std::string mtlPath)

@@ -322,7 +322,19 @@ void EngineUI::renderImGUI(Engine *engine, Renderer *renderer)
       bool isSelected = (*selected == entity);
       if (ImGui::Selectable(key.c_str(), isSelected))
       {
+        engine->selectedUI = "";
         *selected = entity;
+      }
+    }
+    for (const auto &[key, _] : engine->UIElements)
+    {
+      ImGui::TableNextRow();
+      ImGui::TableNextColumn();
+      bool isSelected = (*selected == -1 && engine->selectedUI == key);
+      if (ImGui::Selectable(key.c_str(), isSelected))
+      {
+        engine->selectedUI = key;
+        *selected = -1;
       }
     }
     ImGui::EndTable();
@@ -377,6 +389,14 @@ void EngineUI::renderImGUI(Engine *engine, Renderer *renderer)
       updated |= ImGui::DragFloat("Mass", &rigidBody.mass, 0.1f);
       updated |= ImGui::Checkbox("Is Static", &rigidBody.isStatic);
       updated |= ImGui::Checkbox("Use Gravity", &rigidBody.useGravity);
+    }
+  }
+  else if (!engine->selectedUI.empty())
+  {
+    auto it = engine->UIElements.find(engine->selectedUI);
+    if (it != engine->UIElements.end() && it->second)
+    {
+      ImGui::DragFloat3("Position", &it->second->position.x, 0.1f);
     }
   }
   ImGui::End();

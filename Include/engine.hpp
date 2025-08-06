@@ -23,9 +23,13 @@ public:
   Input input;
 
   ECSRegistry registry;
+  std::unordered_map<std::string, std::unique_ptr<UI>> UIElements;
+  std::unordered_map<std::string, tinygltf::Model> loadedModels;
+
+  std::string selectedUI = "";
   PhysicsSystem physics;
 
-  Engine(uint32_t width = 1600, uint32_t height = 1200) : WIDTH(width), HEIGHT(height), camera(), renderer(camera, WIDTH, HEIGHT), registry(), physics(registry)
+    Engine(uint32_t width = 1600, uint32_t height = 1200) : WIDTH(width), HEIGHT(height), camera(), renderer(camera, WIDTH, HEIGHT), registry(), physics(registry)
   {
   }
 
@@ -74,11 +78,15 @@ public:
   void disableCursor();
   void enableCursor();
 
+  void createAnimatedModelFromFile(std::string baseName, std::string path);
   void addEmptyMeshComponent(Entity entity);
   void addMeshComponent(Entity entity, MaterialData material, const std::string &texturePath, const std::vector<Vertex> &vertices, const std::vector<uint32_t> &indices);
   void addMeshComponent(Entity entity, const std::string objPath, const std::string mtlPath);
   void addMeshToComponent(Entity entity, MaterialData material, const std::string &texturePath, const std::vector<Vertex> &vertices, const std::vector<uint32_t> &indices);
   void removeMeshComponent(Entity entity);
+  void addEmptyAnimatedMeshComponent(Entity entity);
+  void addAnimatedMeshToComponent(Entity entity, MaterialData material, const std::string &texturePath, const std::vector<AnimatedVertex> &vertices, const std::vector<uint32_t> &indices);
+  void addSkeletonComponent(Entity entity, std::vector<glm::mat4> inverseBindMatrices, std::vector<int> jointNodeIndices, tinygltf::Model *model, const tinygltf::Node *node);
   void addTransformComponent(Entity entity, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale);
   void addBoxColliderComponent(Entity entity, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale);
   void addBoxColliderComponent(Entity entity);
@@ -109,7 +117,6 @@ private:
   std::function<void(Engine *, float)> update;
   std::function<void(Engine *)> start;
   std::vector<ParticleEmitter> particleEmitters;
-  std::unordered_map<std::string, std::unique_ptr<UI>> UIElements;
   bool autoFreeCam = false;
 
   void initWindow(std::string windowName);

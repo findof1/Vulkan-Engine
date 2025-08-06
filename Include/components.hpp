@@ -2,6 +2,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include "mesh.hpp"
+#include "animatedMesh.hpp"
+#include "tiny_gltf.h"
 
 struct TransformComponent
 {
@@ -19,6 +21,61 @@ struct MeshComponent
   bool loadedFromFile = false;
   std::string objPath;
   std::string mtlPath;
+};
+
+struct AnimatedMeshComponent
+{
+  bool hide = false;
+  std::vector<AnimatedMesh> meshes;
+};
+
+struct SkeletonComponent
+{
+  tinygltf::Model *model;
+  const tinygltf::Node *node;
+  std::vector<int> jointNodeIndices;
+  std::vector<glm::mat4> inverseBindMats;
+  std::unordered_map<int, int> nodeToParent;
+  std::array<glm::mat4, 100> finalBoneMatrices;
+  bool computeFinalBoneMatrices = true;
+
+  struct NodeLocalTransform
+  {
+    glm::vec3 translation = glm::vec3(0.0f);
+    glm::vec4 rotation = glm::vec4(1, 0, 0, 0);
+    glm::vec3 scale = glm::vec3(1.0f);
+  };
+  std::vector<NodeLocalTransform> nodeTransforms;
+};
+
+struct AnimationSampler
+{
+  std::vector<float> inputTimes;
+  std::vector<glm::vec4> outputValues;
+  std::string interpolation;
+};
+
+struct AnimationChannel
+{
+  int nodeIndex;
+  std::string path;
+  int samplerIndex;
+};
+
+struct Animation
+{
+  std::string name;
+  std::vector<AnimationSampler> samplers;
+  std::vector<AnimationChannel> channels;
+  float duration = 0.0f;
+};
+
+struct AnimationComponent
+{
+  std::vector<Animation> animations;
+  int currentAnimationIndex = -1;
+  float currentTime = 0.0f;
+  bool playing = false;
 };
 
 struct BoxColliderComponent

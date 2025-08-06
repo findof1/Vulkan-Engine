@@ -12,6 +12,9 @@ private:
 
 public:
   std::unordered_map<Entity, TransformComponent> transforms;
+  std::unordered_map<Entity, SkeletonComponent> animationSkeletons;
+  std::unordered_map<Entity, AnimatedMeshComponent> animatedMeshes;
+  std::unordered_map<Entity, AnimationComponent> animationComponents;
   std::unordered_map<Entity, MeshComponent> meshes;
   std::unordered_map<Entity, BoxColliderComponent> boxColliders;
   std::unordered_map<Entity, RigidBodyComponent> rigidBodies;

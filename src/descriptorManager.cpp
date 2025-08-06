@@ -61,6 +61,23 @@ void DescriptorManager::createDescriptorSetLayout(VkDevice device)
   {
     throw std::runtime_error("failed to create compute descriptor set layout!");
   }
+
+  VkDescriptorSetLayoutBinding animUboLayoutBinding{};
+  animUboLayoutBinding.binding = 0;
+  animUboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  animUboLayoutBinding.descriptorCount = 1;
+  animUboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+  animUboLayoutBinding.pImmutableSamplers = nullptr;
+
+  VkDescriptorSetLayoutCreateInfo animLayoutInfo{};
+  animLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+  animLayoutInfo.bindingCount = 1;
+  animLayoutInfo.pBindings = &animUboLayoutBinding;
+
+  if (vkCreateDescriptorSetLayout(device, &animLayoutInfo, nullptr, &animDescriptorSetLayout) != VK_SUCCESS)
+  {
+    throw std::runtime_error("failed to create animation descriptor set layout!");
+  }
 }
 
 void DescriptorManager::createDescriptorPool(VkDevice device, int MAX_FRAMES_IN_FLIGHT, int count)
@@ -317,6 +334,53 @@ void DescriptorManager::addDescriptorSets(VkDevice device, int MAX_FRAMES_IN_FLI
   }
   descriptorSets.reserve(descriptorSets.size() + newDescriptorSets.size());
   descriptorSets.insert(descriptorSets.end(), newDescriptorSets.begin(), newDescriptorSets.end());
+}
+
+void DescriptorManager::addAnimDescriptorSets(VkDevice device, int MAX_FRAMES_IN_FLIGHT, int count, int meshIdStart)
+{
+  std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT * count, animDescriptorSetLayout);
+
+  VkDescriptorSetAllocateInfo allocInfo{};
+  allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+  allocInfo.descriptorPool = descriptorPool;
+  allocInfo.descriptorSetCount = static_cast<uint32_t>(layouts.size());
+  allocInfo.pSetLayouts = layouts.data();
+
+  std::vector<VkDescriptorSet> newDescriptorSets(layouts.size());
+
+  if (vkAllocateDescriptorSets(device, &allocInfo, newDescriptorSets.data()) != VK_SUCCESS)
+  {
+    throw std::runtime_error("failed to allocate animation descriptor sets!");
+  }
+
+  for (int objectIdx = 0; objectIdx < count; objectIdx++)
+  {
+    for (int frame = 0; frame < MAX_FRAMES_IN_FLIGHT; frame++)
+    {
+      int globalIndex = (meshIdStart + objectIdx) * MAX_FRAMES_IN_FLIGHT + frame;
+      int localIndex = (objectIdx)*MAX_FRAMES_IN_FLIGHT + frame;
+
+      VkDescriptorBufferInfo bufferInfo{};
+      bufferInfo.buffer = bufferManager.animatedUniformBuffers[globalIndex];
+      bufferInfo.offset = 0;
+      bufferInfo.range = sizeof(AnimatedUniformBufferObject);
+
+      std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
+
+      descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+      descriptorWrites[0].dstSet = newDescriptorSets[localIndex];
+      descriptorWrites[0].dstBinding = 0;
+      descriptorWrites[0].dstArrayElement = 0;
+      descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+      descriptorWrites[0].descriptorCount = 1;
+      descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+      vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+
+      int descriptorKey = (meshIdStart + objectIdx) * MAX_FRAMES_IN_FLIGHT + frame;
+      animDescriptorSets[descriptorKey] = newDescriptorSets[localIndex];
+    }
+  }
 }
 
 void DescriptorManager::cleanup(VkDevice device)

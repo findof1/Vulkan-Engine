@@ -35,6 +35,31 @@ void BufferManager::createUniformBuffers(int MAX_FRAMES_IN_FLIGHT, VkDevice devi
   }
 }
 
+void BufferManager::createAnimationUniformBuffers(int MAX_FRAMES_IN_FLIGHT, VkDevice device, VkPhysicalDevice physicalDevice, int count, int startingId)
+{
+  VkDeviceSize bufferSize = sizeof(AnimatedUniformBufferObject);
+
+  for (size_t i = 0; i < count; i++)
+  {
+    for (int frame = 0; frame < MAX_FRAMES_IN_FLIGHT; frame++)
+    {
+      int id = (startingId + i) * MAX_FRAMES_IN_FLIGHT + frame;
+
+      VkBuffer buffer;
+      VkDeviceMemory memory;
+      void *mapped;
+
+      createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, buffer, memory, device, physicalDevice);
+
+      vkMapMemory(device, memory, 0, bufferSize, 0, &mapped);
+
+      animatedUniformBuffers[id] = buffer;
+      animatedUniformBuffersMemory[id] = memory;
+      animatedUniformBuffersMapped[id] = mapped;
+    }
+  }
+}
+
 void BufferManager::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer, VkDeviceMemory &bufferMemory, VkDevice device, VkPhysicalDevice physicalDevice)
 {
   VkBufferCreateInfo bufferInfo{};
@@ -121,6 +146,75 @@ void BufferManager::createIndexBuffer(const std::vector<uint32_t> &inputIndices,
 }
 
 void BufferManager::createVertexBuffer(const std::vector<Vertex> &verts, int targetBuffer, VkDevice device, VkPhysicalDevice physicalDevice, VkCommandPool commandPool, VkQueue graphicsQueue)
+{
+  VkDeviceSize bufferSize = sizeof(verts[0]) * verts.size();
+
+  if (bufferSize == 0)
+  {
+    return;
+  }
+  if (vertexBuffers.size() <= targetBuffer)
+  {
+    vertexBuffers.resize(targetBuffer + 1, VK_NULL_HANDLE);
+    vertexBufferMemory.resize(targetBuffer + 1, VK_NULL_HANDLE);
+    vertexBufferSizes.resize(targetBuffer + 1, 0);
+  }
+
+  if (vertexBuffers[targetBuffer] != VK_NULL_HANDLE)
+  {
+    VkBuffer stagingBuffer;
+    VkDeviceMemory stagingBufferMemory;
+    createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory, device, physicalDevice);
+
+    void *data;
+    vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+    memcpy(data, verts.data(), (size_t)bufferSize);
+    vkUnmapMemory(device, stagingBufferMemory);
+
+    if (bufferSize > vertexBufferSizes[targetBuffer])
+    {
+      if (vertexBuffers[targetBuffer] != VK_NULL_HANDLE)
+      {
+        vkQueueWaitIdle(graphicsQueue);
+        vkDestroyBuffer(device, vertexBuffers[targetBuffer], nullptr);
+      }
+      if (vertexBufferMemory[targetBuffer] != VK_NULL_HANDLE)
+      {
+        vkFreeMemory(device, vertexBufferMemory[targetBuffer], nullptr);
+      }
+
+      createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, vertexBuffers[targetBuffer], vertexBufferMemory[targetBuffer], device, physicalDevice);
+
+      vertexBufferSizes[targetBuffer] = bufferSize;
+    }
+
+    copyBuffer(stagingBuffer, vertexBuffers[targetBuffer], bufferSize, device, commandPool, graphicsQueue);
+
+    vkDestroyBuffer(device, stagingBuffer, nullptr);
+    vkFreeMemory(device, stagingBufferMemory, nullptr);
+
+    return;
+  }
+
+  vertexBufferSizes[targetBuffer] = bufferSize;
+  VkBuffer stagingBuffer;
+  VkDeviceMemory stagingBufferMemory;
+  createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory, device, physicalDevice);
+
+  void *data;
+  vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+  memcpy(data, verts.data(), (size_t)bufferSize);
+  vkUnmapMemory(device, stagingBufferMemory);
+
+  createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, vertexBuffers[targetBuffer], vertexBufferMemory[targetBuffer], device, physicalDevice);
+
+  copyBuffer(stagingBuffer, vertexBuffers[targetBuffer], bufferSize, device, commandPool, graphicsQueue);
+
+  vkDestroyBuffer(device, stagingBuffer, nullptr);
+  vkFreeMemory(device, stagingBufferMemory, nullptr);
+}
+
+void BufferManager::createAnimatedVertexBuffer(const std::vector<AnimatedVertex> &verts, int targetBuffer, VkDevice device, VkPhysicalDevice physicalDevice, VkCommandPool commandPool, VkQueue graphicsQueue)
 {
   VkDeviceSize bufferSize = sizeof(verts[0]) * verts.size();
 
@@ -303,6 +397,15 @@ void BufferManager::updateUniformBuffer(uint32_t currentImage, glm::mat4 transfo
   ubo.proj[1][1] *= -1;
 
   memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
+}
+
+void BufferManager::updateAnimationUniformBuffer(uint32_t currentImage, std::array<glm::mat4, 100> &boneMatrices)
+{
+  AnimatedUniformBufferObject ubo{};
+
+  std::copy(boneMatrices.begin(), boneMatrices.end(), std::begin(ubo.boneMatrices));
+
+  memcpy(animatedUniformBuffersMapped.at(currentImage), &ubo, sizeof(ubo));
 }
 
 void BufferManager::updateComputeUniformBuffer(uint32_t currentImage, float deltaTime)

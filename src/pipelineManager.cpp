@@ -430,8 +430,68 @@ void PipelineManager::createGraphicsPipeline(VkDevice device)
     throw std::runtime_error("failed to create graphics pipeline!");
   }
 
+  auto animatedVertShaderCode = readFile("shaders/aminatedVert.spv");
+  VkShaderModule animatedVertShaderModule = createShaderModule(animatedVertShaderCode, device);
+
+  VkPipelineShaderStageCreateInfo animVertShaderStageInfo{};
+  animVertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+  animVertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+  animVertShaderStageInfo.module = animatedVertShaderModule;
+  animVertShaderStageInfo.pName = "main";
+
+  VkPipelineShaderStageCreateInfo animShaderStages[] = {animVertShaderStageInfo, fragShaderStageInfo};
+
+  VkVertexInputBindingDescription aminatedVertexBinding = AnimatedVertex::getBindingDescription();
+  auto animatedVertexAttributes = AnimatedVertex::getAttributeDescriptions();
+
+  VkPipelineVertexInputStateCreateInfo animatedVertexInputInfo{};
+  animatedVertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+  animatedVertexInputInfo.vertexBindingDescriptionCount = 1;
+  animatedVertexInputInfo.pVertexBindingDescriptions = &aminatedVertexBinding;
+  animatedVertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(animatedVertexAttributes.size());
+  animatedVertexInputInfo.pVertexAttributeDescriptions = animatedVertexAttributes.data();
+
+  std::array<VkDescriptorSetLayout, 2> setLayouts = {descriptorManager.descriptorSetLayout, descriptorManager.animDescriptorSetLayout};
+
+  VkPipelineLayoutCreateInfo animPipelineLayoutInfo{};
+  animPipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+  animPipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(setLayouts.size());
+  animPipelineLayoutInfo.pSetLayouts = setLayouts.data();
+  animPipelineLayoutInfo.pushConstantRangeCount = 1;
+  animPipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+
+  if (vkCreatePipelineLayout(device, &animPipelineLayoutInfo, nullptr, &animPipelineLayout) != VK_SUCCESS)
+  {
+    throw std::runtime_error("failed to create pipeline layout!");
+  }
+
+  VkGraphicsPipelineCreateInfo animPipelineInfo{};
+  animPipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+  animPipelineInfo.stageCount = 2;
+  animPipelineInfo.pStages = animShaderStages;
+  animPipelineInfo.pVertexInputState = &animatedVertexInputInfo;
+  animPipelineInfo.pInputAssemblyState = &inputAssembly;
+  animPipelineInfo.pViewportState = &viewportState;
+  animPipelineInfo.pRasterizationState = &rasterizer;
+  animPipelineInfo.pMultisampleState = &multisampling;
+  animPipelineInfo.pDepthStencilState = nullptr;
+  animPipelineInfo.pColorBlendState = &colorBlending;
+  animPipelineInfo.pDynamicState = &dynamicState;
+  animPipelineInfo.pDepthStencilState = &depthStencil;
+  animPipelineInfo.layout = animPipelineLayout;
+  animPipelineInfo.renderPass = renderPass;
+  animPipelineInfo.subpass = 0;
+  animPipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+  animPipelineInfo.basePipelineIndex;
+
+  if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &animPipelineInfo, nullptr, &animationPipeline) != VK_SUCCESS)
+  {
+    throw std::runtime_error("failed to create animation pipeline!");
+  }
+
   vkDestroyShaderModule(device, fragShaderModule, nullptr);
   vkDestroyShaderModule(device, vertShaderModule, nullptr);
+  vkDestroyShaderModule(device, animatedVertShaderModule, nullptr);
 }
 
 void PipelineManager::createColorIDPipeline(VkDevice device)
