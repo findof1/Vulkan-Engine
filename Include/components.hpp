@@ -23,6 +23,11 @@ struct MeshComponent
   std::string mtlPath;
 };
 
+struct ParentComponent
+{
+  int parent;
+};
+
 struct AnimatedMeshComponent
 {
   bool hide = false;

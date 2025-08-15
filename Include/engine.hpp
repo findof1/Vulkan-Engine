@@ -29,7 +29,7 @@ public:
   std::string selectedUI = "";
   PhysicsSystem physics;
 
-    Engine(uint32_t width = 1600, uint32_t height = 1200) : WIDTH(width), HEIGHT(height), camera(), renderer(camera, WIDTH, HEIGHT), registry(), physics(registry)
+  Engine(uint32_t width = 1600, uint32_t height = 1200) : WIDTH(width), HEIGHT(height), camera(), renderer(camera, WIDTH, HEIGHT), registry(), physics(registry)
   {
   }
 
@@ -78,7 +78,7 @@ public:
   void disableCursor();
   void enableCursor();
 
-  void createAnimatedModelFromFile(std::string baseName, std::string path);
+  void createAnimatedModelFromFile(std::string baseName, std::string path, std::string texturesDir);
   void addEmptyMeshComponent(Entity entity);
   void addMeshComponent(Entity entity, MaterialData material, const std::string &texturePath, const std::vector<Vertex> &vertices, const std::vector<uint32_t> &indices);
   void addMeshComponent(Entity entity, const std::string objPath, const std::string mtlPath);

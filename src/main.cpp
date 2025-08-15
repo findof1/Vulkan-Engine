@@ -64,66 +64,66 @@ int main()
     {
         engine.init("Game Engine", start, update);
         engine.useFreeCamMode(true);
-        /*
-                MaterialData ground;
-                ground.diffuseColor = {0.5, 0.5, 0.5};
-                ground.hasTexture = 1;
 
-                Entity skyBox = engine.createEmptyGameObject("skyBox");
-                engine.addMeshComponent(skyBox, ground, "textures/sky.png", cubeVerticesNoNormals, skyBoxIndices);
-                TransformComponent &transformSky = engine.getTransformComponent(skyBox);
-                transformSky.scale = glm::vec3(1000, 1000, 1000);
-                transformSky.position = glm::vec3(0, 0, 0);
+        MaterialData ground;
+        ground.diffuseColor = {0.5, 0.5, 0.5};
+        ground.hasTexture = 1;
 
-                Entity object1 = engine.createEmptyGameObject("object");
-                engine.addMeshComponent(object1, ground, "textures/wood.png", cubeVertices, cubeIndices);
-                TransformComponent &transform = engine.getTransformComponent(object1);
-                transform.scale = glm::vec3(100, 25, 100);
-                transform.position = glm::vec3(0, -10, 0);
-                transform.rotationZYX = glm::vec3(0, 0, 0);
-                engine.addBoxColliderComponent(object1);
-                engine.addRigidBodyComponent(object1);
-                engine.setRigidBodyComponentStatic(object1, true);
+        Entity skyBox = engine.createEmptyGameObject("skyBox");
+        engine.addMeshComponent(skyBox, ground, "textures/sky.png", cubeVerticesNoNormals, skyBoxIndices);
+        TransformComponent &transformSky = engine.getTransformComponent(skyBox);
+        transformSky.scale = glm::vec3(1000, 1000, 1000);
+        transformSky.position = glm::vec3(0, 0, 0);
 
-                Entity object2 = engine.createEmptyGameObject("cube 1");
-                engine.addMeshComponent(object2, ground, "textures/wood.png", cubeVertices, cubeIndices);
-                TransformComponent &transform2 = engine.getTransformComponent(object2);
-                transform2.scale = glm::vec3(1, 1, 1);
-                transform2.position = glm::vec3(0, 300, 0);
-                engine.addBoxColliderComponent(object2);
-                engine.addRigidBodyComponent(object2);
+        Entity object1 = engine.createEmptyGameObject("object");
+        engine.addMeshComponent(object1, ground, "textures/wood.png", cubeVertices, cubeIndices);
+        TransformComponent &transform = engine.getTransformComponent(object1);
+        transform.scale = glm::vec3(100, 30, 100);
+        transform.position = glm::vec3(0, -15, 0);
+        transform.rotationZYX = glm::vec3(0, 0, 0);
+        engine.addBoxColliderComponent(object1);
+        engine.addRigidBodyComponent(object1);
+        engine.setRigidBodyComponentStatic(object1, true);
 
-                Entity object3 = engine.createEmptyGameObject("cube 2");
-                engine.addMeshComponent(object3, ground, "textures/wood.png", cubeVertices, cubeIndices);
-                TransformComponent &transform3 = engine.getTransformComponent(object3);
-                transform3.scale = glm::vec3(1, 1, 1);
-                transform3.position = glm::vec3(0.1f, 350.0f, 0);
-                transform3.rotationZYX = glm::vec3(45, 45, 45);
-                engine.addBoxColliderComponent(object3);
-                engine.addRigidBodyComponent(object3);
+        Entity object2 = engine.createEmptyGameObject("cube 1");
+        engine.addMeshComponent(object2, ground, "textures/wood.png", cubeVertices, cubeIndices);
+        TransformComponent &transform2 = engine.getTransformComponent(object2);
+        transform2.scale = glm::vec3(1, 1, 1);
+        transform2.position = glm::vec3(10, 200, 0);
+        engine.addBoxColliderComponent(object2);
+        engine.addRigidBodyComponent(object2);
 
-                Entity object4 = engine.createEmptyGameObject("cube 3");
-                engine.addMeshComponent(object4, ground, "textures/wood.png", cubeVertices, cubeIndices);
-                TransformComponent &transform4 = engine.getTransformComponent(object4);
-                transform4.scale = glm::vec3(1, 1, 1);
-                transform4.position = glm::vec3(0, 300, 0);
-                engine.addBoxColliderComponent(object4);
-                engine.addRigidBodyComponent(object4);
+        Entity object3 = engine.createEmptyGameObject("cube 2");
+        engine.addMeshComponent(object3, ground, "textures/wood.png", cubeVertices, cubeIndices);
+        TransformComponent &transform3 = engine.getTransformComponent(object3);
+        transform3.scale = glm::vec3(1, 1, 1);
+        transform3.position = glm::vec3(0.1f, 150.0f, 15);
+        transform3.rotationZYX = glm::vec3(45, 45, 45);
+        engine.addBoxColliderComponent(object3);
+        engine.addRigidBodyComponent(object3);
 
-                Entity couch = engine.createEmptyGameObject("couch");
-                engine.addMeshComponent(couch, "models/couch/couch1.obj", "models/couch/couch1.mtl");
-                TransformComponent &transformCouch = engine.getTransformComponent(couch);
-                transformCouch.scale = glm::vec3(0.1f, 0.1f, 0.1f);
-                transformCouch.position = glm::vec3(10, 100.0f, 0);
-                transformCouch.rotationZYX = glm::vec3(45, 45, 45);
-                engine.addBoxColliderComponent(couch);
-                engine.registry.boxColliders.at(couch).localMin = glm::vec3(-10, -10, -40);
-                engine.registry.boxColliders.at(couch).localMax = glm::vec3(10, 10, 40);
-                engine.updateBoxCollider(couch);
-                engine.addRigidBodyComponent(couch);
-        */
-        engine.createAnimatedModelFromFile("AnimationMan", "models/animationMan/man.gltf");
-        // engine.createAnimatedModelFromFile("GLTFMan", "models/gltfMan/scene.gltf");
+        Entity object4 = engine.createEmptyGameObject("cube 3");
+        engine.addMeshComponent(object4, ground, "textures/wood.png", cubeVertices, cubeIndices);
+        TransformComponent &transform4 = engine.getTransformComponent(object4);
+        transform4.scale = glm::vec3(1, 1, 1);
+        transform4.position = glm::vec3(14, 100, 0);
+        engine.addBoxColliderComponent(object4);
+        engine.addRigidBodyComponent(object4);
+
+        Entity couch = engine.createEmptyGameObject("couch");
+        engine.addMeshComponent(couch, "models/couch/couch1.obj", "models/couch/couch1.mtl");
+        TransformComponent &transformCouch = engine.getTransformComponent(couch);
+        transformCouch.scale = glm::vec3(0.1f, 0.1f, 0.1f);
+        transformCouch.position = glm::vec3(10, 100.0f, 10);
+        transformCouch.rotationZYX = glm::vec3(45, 45, 45);
+        engine.addBoxColliderComponent(couch);
+        engine.registry.boxColliders.at(couch).localMin = glm::vec3(-10, -10, -40);
+        engine.registry.boxColliders.at(couch).localMax = glm::vec3(10, 10, 40);
+        engine.updateBoxCollider(couch);
+        engine.addRigidBodyComponent(couch);
+
+        engine.createAnimatedModelFromFile("AnimationMan", "models/animationMan/man.gltf", "models/animationMan/");
+        engine.createAnimatedModelFromFile("GLTFMan", "models/gltfMan/scene.gltf", "models/gltfMan/");
         /*
                 engine.addTextElement("titleText", glm::vec3(10.0f, -100.0f, 0.0f), "Hello, UI!");
 

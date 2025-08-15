@@ -171,6 +171,33 @@ glm::mat4 getGlobalTransform(int nodeIndex, SkeletonComponent &skeleton, glm::ma
   return transform;
 }
 
+glm::mat4 getWorldTransform(ECSRegistry &registry, Entity e)
+{
+  auto transformIt = registry.transforms.find(e);
+  glm::mat4 transformation(1.0f);
+
+  if (transformIt != registry.transforms.end())
+  {
+    const TransformComponent &transform = transformIt->second;
+
+    transformation = glm::translate(transformation, transform.position);
+    transformation = glm::rotate(transformation, glm::radians(transform.rotationZYX.x), glm::vec3(0.0f, 0.0f, 1.0f));
+    transformation = glm::rotate(transformation, glm::radians(transform.rotationZYX.y), glm::vec3(0.0f, 1.0f, 0.0f));
+    transformation = glm::rotate(transformation, glm::radians(transform.rotationZYX.z), glm::vec3(1.0f, 0.0f, 0.0f));
+    transformation = glm::scale(transformation, transform.scale);
+  }
+
+  auto parentIt = registry.parents.find(e);
+  if (parentIt != registry.parents.end())
+  {
+    Entity parent = parentIt->second.parent;
+    glm::mat4 parentTransform = getWorldTransform(registry, parent);
+    transformation = parentTransform * transformation;
+  }
+
+  return transformation;
+}
+
 RenderCommand makeGameObjectCommand(ECSRegistry &registry, Entity e, Renderer *renderer, int currentFrame, glm::mat4 view, glm::mat4 proj)
 {
   return {
@@ -179,105 +206,6 @@ RenderCommand makeGameObjectCommand(ECSRegistry &registry, Entity e, Renderer *r
         auto meshIt = registry.meshes.find(e);
         if (meshIt == registry.meshes.end() || meshIt->second.hide)
         {
-          auto animMeshIt = registry.animatedMeshes.find(e);
-          if (animMeshIt == registry.animatedMeshes.end() || animMeshIt->second.hide)
-          {
-
-            return;
-          }
-
-          if (renderStage == ColorID) // Need to add support for color picking with animated meshes later
-          {
-            return;
-          }
-          vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, renderer->pipelineManager.animationPipeline);
-          setTriangleTopology(renderer, cmdBuf);
-          enableDepthWrite(renderer, cmdBuf);
-
-          VkExtent2D offscreenExtent;
-          offscreenExtent.width = renderer->engineUI.imageW;
-          offscreenExtent.height = renderer->engineUI.imageH;
-          setupViewportScissor(cmdBuf, offscreenExtent);
-
-          AnimatedMeshComponent &animMeshComp = registry.animatedMeshes.at(e);
-
-          if (animMeshComp.hide)
-            return;
-
-          auto transformIt = registry.transforms.find(e);
-          glm::mat4 transformation(1.0f);
-          if (transformIt != registry.transforms.end())
-          {
-            const TransformComponent &transform = transformIt->second;
-
-            transformation = glm::translate(transformation, transform.position);
-            transformation = glm::rotate(transformation, glm::radians(transform.rotationZYX.x), glm::vec3(0.0f, 0.0f, 1.0f));
-            transformation = glm::rotate(transformation, glm::radians(transform.rotationZYX.y), glm::vec3(0.0f, 1.0f, 0.0f));
-            transformation = glm::rotate(transformation, glm::radians(transform.rotationZYX.z), glm::vec3(1.0f, 0.0f, 0.0f));
-            transformation = glm::scale(transformation, transform.scale);
-          }
-
-          SkeletonComponent &skeleton = registry.animationSkeletons.at(e);
-          if (registry.animationComponents.find(e) != registry.animationComponents.end())
-          {
-            float currentTime = glfwGetTime();
-            if (currentTime > 0)
-            {
-              AnimationComponent &animations = registry.animationComponents.at(e);
-              Animation &animation = animations.animations.at(0);
-              currentTime = fmod(currentTime, animation.duration);
-
-              for (auto &channel : animation.channels)
-              {
-                AnimationSampler &sampler = animation.samplers[channel.samplerIndex];
-                int frameIndex = 0;
-                for (size_t i = 0; i < sampler.inputTimes.size(); ++i)
-                {
-                  if (sampler.inputTimes[i] > currentTime)
-                    break;
-                  frameIndex = i;
-                }
-
-                if (channel.path == "translation")
-                {
-                  skeleton.nodeTransforms[channel.nodeIndex].translation = glm::vec3(sampler.outputValues[frameIndex]);
-                  skeleton.computeFinalBoneMatrices = true;
-                }
-                else if (channel.path == "rotation")
-                {
-                  skeleton.nodeTransforms[channel.nodeIndex].rotation = glm::vec4(sampler.outputValues[frameIndex][3], sampler.outputValues[frameIndex][0], sampler.outputValues[frameIndex][1], sampler.outputValues[frameIndex][2]);
-                  skeleton.computeFinalBoneMatrices = true;
-                }
-                else if (channel.path == "scale")
-                {
-                  skeleton.nodeTransforms[channel.nodeIndex].scale = glm::vec3(sampler.outputValues[frameIndex]);
-                  skeleton.computeFinalBoneMatrices = true;
-                }
-              }
-            }
-          }
-
-          if (skeleton.computeFinalBoneMatrices)
-          {
-            skeleton.computeFinalBoneMatrices = !skeleton.computeFinalBoneMatrices;
-            skeleton.finalBoneMatrices = {};
-
-            const tinygltf::Skin &skin = skeleton.model->skins[skeleton.node->skin];
-            for (int i = 0; i < skin.joints.size(); i++)
-            {
-              int jointNodeIndex = skin.joints[i];
-
-              glm::mat4 jointGlobalTransform = getGlobalTransform(jointNodeIndex, skeleton);
-              glm::mat4 inverseBind = skeleton.inverseBindMats[i];
-              skeleton.finalBoneMatrices[i] = jointGlobalTransform * inverseBind;
-            }
-          }
-
-          for (auto &mesh : animMeshComp.meshes)
-          {
-            mesh.draw(renderer, currentFrame, transformation, view, proj, skeleton.finalBoneMatrices, cmdBuf, renderStage == MainRender ? -1 : e);
-          }
-
           return;
         }
 
@@ -309,22 +237,105 @@ RenderCommand makeGameObjectCommand(ECSRegistry &registry, Entity e, Renderer *r
         if (meshComp.hide)
           return;
 
-        auto transformIt = registry.transforms.find(e);
-        glm::mat4 transformation(1.0f);
-        if (transformIt != registry.transforms.end())
-        {
-          const TransformComponent &transform = transformIt->second;
-
-          transformation = glm::translate(transformation, transform.position);
-          transformation = glm::rotate(transformation, glm::radians(transform.rotationZYX.x), glm::vec3(0.0f, 0.0f, 1.0f));
-          transformation = glm::rotate(transformation, glm::radians(transform.rotationZYX.y), glm::vec3(0.0f, 1.0f, 0.0f));
-          transformation = glm::rotate(transformation, glm::radians(transform.rotationZYX.z), glm::vec3(1.0f, 0.0f, 0.0f));
-          transformation = glm::scale(transformation, transform.scale);
-        }
+        glm::mat4 transformation = getWorldTransform(registry, e);
 
         for (auto &mesh : meshComp.meshes)
         {
           mesh.draw(renderer, currentFrame, transformation, view, proj, cmdBuf, renderStage == MainRender ? -1 : e);
+        }
+      }};
+}
+
+RenderCommand makeAnimatedGameObjectCommand(ECSRegistry &registry, Entity e, Renderer *renderer, int currentFrame, glm::mat4 view, glm::mat4 proj)
+{
+  return {
+      [&registry, renderer, e, currentFrame, view, proj](VkCommandBuffer cmdBuf, RenderStage renderStage)
+      {
+        auto animMeshIt = registry.animatedMeshes.find(e);
+        if (animMeshIt == registry.animatedMeshes.end() || animMeshIt->second.hide)
+        {
+          return;
+        }
+
+        if (renderStage == ColorID) // Need to add support for color picking with animated meshes later
+        {
+          return;
+        }
+        vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, renderer->pipelineManager.animationPipeline);
+        setTriangleTopology(renderer, cmdBuf);
+        enableDepthWrite(renderer, cmdBuf);
+
+        VkExtent2D offscreenExtent;
+        offscreenExtent.width = renderer->engineUI.imageW;
+        offscreenExtent.height = renderer->engineUI.imageH;
+        setupViewportScissor(cmdBuf, offscreenExtent);
+
+        AnimatedMeshComponent &animMeshComp = registry.animatedMeshes.at(e);
+
+        if (animMeshComp.hide)
+          return;
+
+        glm::mat4 transformation = getWorldTransform(registry, e);
+
+        SkeletonComponent &skeleton = registry.animationSkeletons.at(e);
+        if (registry.animationComponents.find(e) != registry.animationComponents.end())
+        {
+          float currentTime = glfwGetTime();
+          if (currentTime > 0)
+          {
+            AnimationComponent &animations = registry.animationComponents.at(e);
+            Animation &animation = animations.animations.at(0);
+            currentTime = fmod(currentTime, animation.duration);
+
+            for (auto &channel : animation.channels)
+            {
+              AnimationSampler &sampler = animation.samplers[channel.samplerIndex];
+              int frameIndex = 0;
+              for (size_t i = 0; i < sampler.inputTimes.size(); ++i)
+              {
+                if (sampler.inputTimes[i] > currentTime)
+                  break;
+                frameIndex = i;
+              }
+
+              if (channel.path == "translation")
+              {
+                skeleton.nodeTransforms[channel.nodeIndex].translation = glm::vec3(sampler.outputValues[frameIndex]);
+                skeleton.computeFinalBoneMatrices = true;
+              }
+              else if (channel.path == "rotation")
+              {
+                skeleton.nodeTransforms[channel.nodeIndex].rotation = glm::vec4(sampler.outputValues[frameIndex][3], sampler.outputValues[frameIndex][0], sampler.outputValues[frameIndex][1], sampler.outputValues[frameIndex][2]);
+                skeleton.computeFinalBoneMatrices = true;
+              }
+              else if (channel.path == "scale")
+              {
+                skeleton.nodeTransforms[channel.nodeIndex].scale = glm::vec3(sampler.outputValues[frameIndex]);
+                skeleton.computeFinalBoneMatrices = true;
+              }
+            }
+          }
+        }
+
+        if (skeleton.computeFinalBoneMatrices)
+        {
+          skeleton.computeFinalBoneMatrices = !skeleton.computeFinalBoneMatrices;
+          skeleton.finalBoneMatrices = {};
+
+          const tinygltf::Skin &skin = skeleton.model->skins[skeleton.node->skin];
+          for (int i = 0; i < skin.joints.size(); i++)
+          {
+            int jointNodeIndex = skin.joints[i];
+
+            glm::mat4 jointGlobalTransform = getGlobalTransform(jointNodeIndex, skeleton);
+            glm::mat4 inverseBind = skeleton.inverseBindMats[i];
+            skeleton.finalBoneMatrices[i] = jointGlobalTransform * inverseBind;
+          }
+        }
+
+        for (auto &mesh : animMeshComp.meshes)
+        {
+          mesh.draw(renderer, currentFrame, transformation, view, proj, skeleton.finalBoneMatrices, cmdBuf, renderStage == MainRender ? -1 : e);
         }
       }};
 }

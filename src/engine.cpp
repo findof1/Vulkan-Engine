@@ -61,6 +61,7 @@ void Engine::run()
 {
   float lastFrame = 0.0f;
   float deltaTime = 0.0f;
+  glfwSetTime(0);
 
   start(this);
 
@@ -184,7 +185,7 @@ void Engine::render()
 
   for (auto &[e, _] : registry.animatedMeshes)
   {
-    renderer.renderQueue.push_back(makeGameObjectCommand(registry, e, &renderer, renderer.getCurrentFrame(), view, proj));
+    renderer.renderQueue.push_back(makeAnimatedGameObjectCommand(registry, e, &renderer, renderer.getCurrentFrame(), view, proj));
   }
 
   for (auto &[_, element] : UIElements)
@@ -347,7 +348,7 @@ void recordParentHierarchy(const tinygltf::Model *model, std::unordered_map<int,
   }
 }
 
-void Engine::createAnimatedModelFromFile(std::string baseName, std::string path)
+void Engine::createAnimatedModelFromFile(std::string baseName, std::string path, std::string texturesDir)
 {
 
   tinygltf::Model &model = loadedModels[path];
@@ -370,10 +371,16 @@ void Engine::createAnimatedModelFromFile(std::string baseName, std::string path)
 
   int i = 0;
 
+  Entity baseEntity = createEmptyGameObject(baseName);
+
   for (const auto &node : model.nodes)
   {
     Entity entity = registry.createEntity(baseName + "_" + std::to_string(i));
     i++;
+
+    ParentComponent parentComp;
+    parentComp.parent = baseEntity;
+    registry.parents.emplace(entity, parentComp);
 
     glm::vec3 position = glm::vec3(0.0f);
     glm::quat rotation = glm::quat(1, 0, 0, 0);
@@ -555,7 +562,7 @@ void Engine::createAnimatedModelFromFile(std::string baseName, std::string path)
           MaterialData meshMaterial;
           meshMaterial.hasTexture = false;
           meshMaterial.diffuseColor = glm::vec3(1);
-          std::string textureName;
+          std::string textureName = "models/couch/diffuse.png";
 
           if (primitive.material >= 0)
           {
@@ -569,12 +576,12 @@ void Engine::createAnimatedModelFromFile(std::string baseName, std::string path)
               {
                 const tinygltf::Image &image = model.images[texture.source];
 
-                textureName = image.uri;
+                textureName = texturesDir + image.uri;
+                meshMaterial.hasTexture = true;
               }
             }
           }
-
-          addAnimatedMeshToComponent(entity, meshMaterial, "models/couch/diffuse.png", vertices, indices);
+          addAnimatedMeshToComponent(entity, meshMaterial, textureName, vertices, indices);
         }
       }
     }
