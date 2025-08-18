@@ -15,6 +15,7 @@
 #include "tiny_gltf.h"
 #include "json.hpp"
 #include <glm/gtc/type_ptr.hpp>
+#include <noImage.hpp>
 
 void Engine::initWindow(std::string windowName)
 {
@@ -290,7 +291,7 @@ void Engine::addMeshComponent(Entity entity, MaterialData material, const std::s
     return;
 
   Mesh mesh(renderer, &nextRenderingId, material, vertices, indices);
-  mesh.initGraphics(renderer, texturePath.empty() ? "models/couch/diffuse.png" : texturePath);
+  mesh.initGraphics(renderer, texturePath.empty() ? NO_IMAGE : texturePath);
 
   MeshComponent meshComp;
   meshComp.loadedFromFile = false;
@@ -308,7 +309,7 @@ void Engine::addMeshToComponent(Entity entity, MaterialData material, const std:
     return;
 
   Mesh mesh(renderer, &nextRenderingId, material, vertices, indices);
-  mesh.initGraphics(renderer, texturePath.empty() ? "models/couch/diffuse.png" : texturePath);
+  mesh.initGraphics(renderer, texturePath.empty() ? NO_IMAGE : texturePath);
   meshComp.meshes.emplace_back(std::move(mesh));
 }
 
@@ -320,7 +321,7 @@ void Engine::addAnimatedMeshToComponent(Entity entity, MaterialData material, co
   AnimatedMeshComponent &meshComp = registry.animatedMeshes.at(entity);
 
   AnimatedMesh mesh(renderer, &nextRenderingId, material, vertices, indices);
-  mesh.initGraphics(renderer, texturePath.empty() ? "models/couch/diffuse.png" : texturePath);
+  mesh.initGraphics(renderer, texturePath.empty() ? NO_IMAGE : texturePath);
   meshComp.meshes.emplace_back(std::move(mesh));
 }
 
@@ -560,9 +561,9 @@ void Engine::createAnimatedModelFromFile(std::string baseName, std::string path,
           }
 
           MaterialData meshMaterial;
-          meshMaterial.hasTexture = false;
+          meshMaterial.hasDiffuseMap = false;
           meshMaterial.diffuseColor = glm::vec3(1);
-          std::string textureName = "models/couch/diffuse.png";
+          std::string textureName = NO_IMAGE;
 
           if (primitive.material >= 0)
           {
@@ -577,7 +578,7 @@ void Engine::createAnimatedModelFromFile(std::string baseName, std::string path,
                 const tinygltf::Image &image = model.images[texture.source];
 
                 textureName = texturesDir + image.uri;
-                meshMaterial.hasTexture = true;
+                meshMaterial.hasDiffuseMap = true;
               }
             }
           }
@@ -794,7 +795,7 @@ void Engine::addMeshComponent(Entity entity, const std::string objPath, const st
     }
     MaterialData material;
     material.diffuseColor = {0.5f, 0.5f, 0.5f};
-    material.hasTexture = 1;
+    material.hasDiffuseMap = 1;
     std::string texturePath = "";
     std::string fullPath = "";
 
@@ -841,8 +842,8 @@ void Engine::addMeshComponent(Entity entity, const std::string objPath, const st
 
     if (texturePath.empty())
     {
-      material.hasTexture = 0;
-      fullPath = "models/couch/diffuse.png";
+      material.hasDiffuseMap = 0;
+      fullPath = NO_IMAGE;
     }
 
     Mesh mesh(renderer, &nextRenderingId, material, meshVertices, meshIndices);

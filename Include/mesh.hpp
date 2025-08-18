@@ -13,9 +13,15 @@ struct MaterialData
   float shininess = 32.0f;
   float opacity = 1.0f;
   float refractiveIndex = 1.45f;
+
   int illuminationModel = 2;
-  int hasTexture = 0;
   int isParticle = 0;
+
+  int hasDiffuseMap = 0;
+  int hasNormalMap = 0;
+  int hasHeightMap = 0;
+  int hasSpecularMap = 0;
+  int hasShininessMap = 0;
 };
 
 class TextureManager;

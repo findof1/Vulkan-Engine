@@ -3,11 +3,12 @@
 #include "descriptorManager.hpp"
 #include <iostream>
 #include "mesh.hpp"
+#include "noImage.hpp"
 
 Square::Square(Renderer &renderer, int *nextRenderingId, glm::vec3 position, std::array<glm::vec2, 2> verticesOffsets, glm::vec3 color, std::string texture)
     : UI(renderer, nextRenderingId, position), verticesOffsets(verticesOffsets), color(color)
 {
-  if (texture != "models/couch/diffuse.png")
+  if (texture != NO_IMAGE)
   {
     hasTexture = 1;
   }
@@ -31,7 +32,7 @@ void Square::initGraphics(Renderer &renderer, std::string texture)
 
 void Square::initGraphics(Renderer &renderer)
 {
-  textureManager.createTextureImage("models/couch/diffuse.png", renderer.deviceManager.device, renderer.deviceManager.physicalDevice, renderer.commandPool, renderer.graphicsQueue);
+  textureManager.createTextureImage(NO_IMAGE, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, renderer.commandPool, renderer.graphicsQueue);
   textureManager.createTextureImageView(renderer.deviceManager.device);
   textureManager.createTextureSampler(renderer.deviceManager.device, renderer.deviceManager.physicalDevice);
 
@@ -57,7 +58,7 @@ void Square::draw(Renderer *renderer, int currentFrame, glm::mat4 transformation
 
   MaterialData materialData;
   materialData.diffuseColor = color;
-  materialData.hasTexture = hasTexture;
+  materialData.hasDiffuseMap = hasTexture;
 
   vkCmdPushConstants(commandBuffer, renderer->pipelineManager.pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MaterialData), &materialData);
 

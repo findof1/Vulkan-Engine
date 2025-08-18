@@ -4,6 +4,7 @@
 #include "renderer.hpp"
 #include "text.hpp"
 #include <functional>
+#include "noImage.hpp"
 
 class Button : public UI
 {
@@ -23,7 +24,7 @@ public:
 
   std::function<void(void)> callback = []() {};
 
-  Button(Renderer &renderer, int *nextRenderingId, const std::string &label, glm::vec3 position, std::array<glm::vec2, 2> verticesOffsets, std::string texture = "models/couch/diffuse.png");
+  Button(Renderer &renderer, int *nextRenderingId, const std::string &label, glm::vec3 position, std::array<glm::vec2, 2> verticesOffsets, std::string texture = NO_IMAGE);
   void initGraphics(Renderer &renderer) override;
   void initGraphics(Renderer &renderer, std::string texture);
   void draw(Renderer *renderer, int currentFrame, glm::mat4 transformation, glm::mat4 view, glm::mat4 projectionMatrix, VkCommandBuffer commandBuffer) override;

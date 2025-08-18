@@ -14,9 +14,15 @@ layout(push_constant) uniform MaterialData {
     float shininess;
     float opacity;
     float refractiveIndex;
+
     int illuminationModel;
-    int hasTexture;
     int isParticle;
+
+    int hasDiffuseMap;
+    int hasNormalMap;
+    int hasHeightMap;
+    int hasSpecularMap;
+    int hasShininessMap;
 } material;
 
 
@@ -26,7 +32,7 @@ layout(binding = 1) uniform sampler2D texSampler;
 
 void main() {
     if(material.isParticle == 1) {
-        if(material.hasTexture == 1) {
+        if(material.hasDiffuseMap == 1) {
             vec2 texCoord = gl_PointCoord;
             vec4 texColor = texture(texSampler, texCoord);
             outColor = texColor * diffuseColor;
@@ -35,7 +41,7 @@ void main() {
         }
     } else {
         if(fragNormal.x <0 && fragNormal.y <0 && fragNormal.z <0){
-            if(material.hasTexture == 1) {
+            if(material.hasDiffuseMap == 1) {
                 vec4 texColor = texture(texSampler, fragTexCoord);
                 if(texColor.a < 0.1){
                     discard;
@@ -73,7 +79,7 @@ void main() {
         litColor = diffuseColor.rgb * (ambient + diffuse + specular);
          }
          
-         if(material.hasTexture == 1) {
+         if(material.hasDiffuseMap == 1) {
             vec4 texColor = texture(texSampler, fragTexCoord);
             litColor *= texColor.rgb;
         }

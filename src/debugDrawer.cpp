@@ -2,6 +2,7 @@
 #include "renderer.hpp"
 #include <glm/glm.hpp>
 #include "mesh.hpp"
+#include <noImage.hpp>
 
 void VulkanDebugDrawer::drawDebugLines(VkCommandBuffer commandBuffer, const std::vector<Vertex> &lines, glm::mat4 viewMatrix, glm::mat4 projectionMatrix, int currentFrame)
 {
@@ -44,7 +45,7 @@ void VulkanDebugDrawer::drawDebugLines(VkCommandBuffer commandBuffer, const std:
 
   MaterialData materialData;
   materialData.diffuseColor = glm::vec3(0);
-  materialData.hasTexture = false;
+  materialData.hasDiffuseMap = false;
   materialData.isParticle = false;
 
   vkCmdPushConstants(
@@ -59,7 +60,7 @@ void VulkanDebugDrawer::drawDebugLines(VkCommandBuffer commandBuffer, const std:
 }
 VulkanDebugDrawer::VulkanDebugDrawer(Renderer &renderer, int &buffersIndex, bool debug) : debugMode(debug ? 1 : 0), renderer(renderer), buffersIndex(buffersIndex), textureManager(renderer.bufferManager, renderer)
 {
-  textureManager.createTextureImage("models/couch/diffuse.png", renderer.deviceManager.device, renderer.deviceManager.physicalDevice, renderer.commandPool, renderer.graphicsQueue);
+  textureManager.createTextureImage(NO_IMAGE, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, renderer.commandPool, renderer.graphicsQueue);
   textureManager.createTextureImageView(renderer.deviceManager.device);
   textureManager.createTextureSampler(renderer.deviceManager.device, renderer.deviceManager.physicalDevice);
 

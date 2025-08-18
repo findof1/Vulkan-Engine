@@ -69,7 +69,7 @@ void ParticleEmitter::draw(Renderer *renderer, int currentFrame, glm::mat4 view,
 
   MaterialData materialData;
   materialData.diffuseColor = glm::vec3(0);
-  materialData.hasTexture = 1;
+  materialData.hasDiffuseMap = 1;
   materialData.isParticle = 1;
 
   vkCmdPushConstants(

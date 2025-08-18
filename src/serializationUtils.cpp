@@ -123,7 +123,7 @@ void writeMaterialData(std::ofstream &out, const MaterialData &mat)
   writeFloat(out, mat.opacity);
   writeFloat(out, mat.refractiveIndex);
   writeInt(out, mat.illuminationModel);
-  writeInt(out, mat.hasTexture);
+  writeInt(out, mat.hasDiffuseMap);
   writeInt(out, mat.isParticle);
 }
 
@@ -137,7 +137,7 @@ void readMaterialData(std::ifstream &in, MaterialData &mat)
   readFloat(in, mat.opacity);
   readFloat(in, mat.refractiveIndex);
   readInt(in, mat.illuminationModel);
-  readInt(in, mat.hasTexture);
+  readInt(in, mat.hasDiffuseMap);
   readInt(in, mat.isParticle);
 }
 

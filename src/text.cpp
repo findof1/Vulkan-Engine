@@ -137,7 +137,7 @@ void Text::draw(Renderer *renderer, int currentFrame, glm::mat4 transformation, 
 
   MaterialData materialData;
   materialData.diffuseColor = glm::vec3(1);
-  materialData.hasTexture = 1;
+  materialData.hasDiffuseMap = 1;
 
   vkCmdPushConstants(commandBuffer, renderer->pipelineManager.pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MaterialData), &materialData);
 

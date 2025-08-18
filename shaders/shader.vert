@@ -14,9 +14,15 @@ layout(push_constant) uniform MaterialData {
     float shininess;
     float opacity;
     float refractiveIndex;
+
     int illuminationModel;
-    int hasTexture;
     int isParticle;
+
+    int hasDiffuseMap;
+    int hasNormalMap;
+    int hasHeightMap;
+    int hasSpecularMap;
+    int hasShininessMap;
 } material;
 
 layout(location = 0) in vec3 inPosition;

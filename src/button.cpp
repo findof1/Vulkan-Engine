@@ -3,11 +3,12 @@
 #include "descriptorManager.hpp"
 #include <iostream>
 #include "mesh.hpp"
+#include <noImage.hpp>
 
 Button::Button(Renderer &renderer, int *nextRenderingId, const std::string &label, glm::vec3 position, std::array<glm::vec2, 2> verticesOffsets, std::string texture)
     : UI(renderer, nextRenderingId, position), label(label), verticesOffsets(verticesOffsets)
 {
-  if (texture != "models/couch/diffuse.png")
+  if (texture != NO_IMAGE)
   {
     hasTexture = 1;
   }
@@ -32,7 +33,7 @@ void Button::initGraphics(Renderer &renderer, std::string texture)
 
 void Button::initGraphics(Renderer &renderer)
 {
-  textureManager.createTextureImage("models/couch/diffuse.png", renderer.deviceManager.device, renderer.deviceManager.physicalDevice, renderer.commandPool, renderer.graphicsQueue);
+  textureManager.createTextureImage(NO_IMAGE, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, renderer.commandPool, renderer.graphicsQueue);
   textureManager.createTextureImageView(renderer.deviceManager.device);
   textureManager.createTextureSampler(renderer.deviceManager.device, renderer.deviceManager.physicalDevice);
 
@@ -60,7 +61,7 @@ void Button::draw(Renderer *renderer, int currentFrame, glm::mat4 transformation
 
   MaterialData materialData;
   materialData.diffuseColor = currentColor;
-  materialData.hasTexture = hasTexture;
+  materialData.hasDiffuseMap = hasTexture;
 
   vkCmdPushConstants(commandBuffer, renderer->pipelineManager.pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MaterialData), &materialData);
 

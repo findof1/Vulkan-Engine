@@ -3,6 +3,7 @@
 #include "UI.hpp"
 #include "ECSRegistry.hpp"
 #include "physicsSystem.hpp"
+#include "noImage.hpp"
 
 struct Input
 {
@@ -42,8 +43,8 @@ public:
   void clearHierarchy();
 
   void addTextElement(const std::string &name, glm::vec3 position, std::string text);
-  void addSquareElement(const std::string &name, glm::vec3 position, glm::vec3 color, std::array<glm::vec2, 2> verticesOffsets, std::string texture = "models/couch/diffuse.png");
-  void addButtonElement(const std::string &name, glm::vec3 position, std::string text, std::array<glm::vec2, 2> verticesOffsets, glm::vec3 color, glm::vec3 colorHovered, glm::vec3 colorPressed, std::string texture = "models/couch/diffuse.png", std::function<void(void)> callback = []() {});
+  void addSquareElement(const std::string &name, glm::vec3 position, glm::vec3 color, std::array<glm::vec2, 2> verticesOffsets, std::string texture = NO_IMAGE);
+  void addButtonElement(const std::string &name, glm::vec3 position, std::string text, std::array<glm::vec2, 2> verticesOffsets, glm::vec3 color, glm::vec3 colorHovered, glm::vec3 colorPressed, std::string texture = NO_IMAGE, std::function<void(void)> callback = []() {});
 
   inline void moveCamera(const glm::vec3 &offset)
   {
