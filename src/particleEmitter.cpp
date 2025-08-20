@@ -42,13 +42,14 @@ void ParticleEmitter::initGraphics(Renderer &renderer, std::string texturePath)
   renderer.bufferManager.createComputeUniformBuffers(renderer.MAX_FRAMES_IN_FLIGHT, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, 1);
   renderer.descriptorManager.addComputeDescriptorSets(renderer.deviceManager.device, renderer.MAX_FRAMES_IN_FLIGHT, 1);
 
-  textureManager.createTextureImage(texturePath, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, renderer.commandPool, renderer.graphicsQueue);
+  textureManager.createTextureImages(texturePath, NO_IMAGE, NO_IMAGE, NO_IMAGE, NO_IMAGE, NO_IMAGE, NO_IMAGE, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, renderer.commandPool, renderer.graphicsQueue);
   textureManager.createTextureImageView(renderer.deviceManager.device);
   textureManager.createTextureSampler(renderer.deviceManager.device, renderer.deviceManager.physicalDevice);
 
   renderer.bufferManager.createUniformBuffers(renderer.MAX_FRAMES_IN_FLIGHT, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, 1);
 
-  renderer.descriptorManager.addDescriptorSets(renderer.deviceManager.device, renderer.MAX_FRAMES_IN_FLIGHT, 1, textureManager.textureImageView, textureManager.textureSampler);
+  TextureMaps textureMaps(textureManager.albedoImageView, textureManager.albedoSampler, textureManager.normalImageView, textureManager.normalSampler, textureManager.heightImageView, textureManager.heightSampler, textureManager.roughnessImageView, textureManager.roughnessSampler, textureManager.metallicImageView, textureManager.metallicSampler, textureManager.aoImageView, textureManager.aoSampler, textureManager.emissiveImageView, textureManager.emissiveSampler);
+  renderer.descriptorManager.addDescriptorSets(renderer.deviceManager.device, renderer.MAX_FRAMES_IN_FLIGHT, 1, textureMaps);
 }
 
 void ParticleEmitter::draw(Renderer *renderer, int currentFrame, glm::mat4 view, glm::mat4 projectionMatrix, VkCommandBuffer commandBuffer)
@@ -68,8 +69,8 @@ void ParticleEmitter::draw(Renderer *renderer, int currentFrame, glm::mat4 view,
   renderer->bufferManager.updateUniformBuffer(currentFrame + id * renderer->MAX_FRAMES_IN_FLIGHT, transform, view, projectionMatrix);
 
   MaterialData materialData;
-  materialData.diffuseColor = glm::vec3(0);
-  materialData.hasDiffuseMap = 1;
+  materialData.albedoColor = glm::vec3(0);
+  materialData.hasAlbedoMap = 1;
   materialData.isParticle = 1;
 
   vkCmdPushConstants(

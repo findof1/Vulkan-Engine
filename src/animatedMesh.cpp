@@ -6,6 +6,7 @@
 #include <vulkan/vulkan.h>
 #include <tiny_obj_loader.h>
 #include <glm/gtc/quaternion.hpp>
+#include <noImage.hpp>
 
 AnimatedMesh::AnimatedMesh(Renderer &renderer, int *nextRenderingId, MaterialData newMaterial, const std::vector<AnimatedVertex> &vertices, const std::vector<uint32_t> &indices) : vertices(vertices), indices(indices), material(newMaterial), textureManager(renderer.bufferManager, renderer)
 {
@@ -16,7 +17,7 @@ AnimatedMesh::AnimatedMesh(Renderer &renderer, int *nextRenderingId, MaterialDat
 void AnimatedMesh::initGraphics(Renderer &renderer, std::string texturePath)
 {
   texPath = texturePath;
-  textureManager.createTextureImage(texturePath, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, renderer.commandPool, renderer.graphicsQueue);
+  textureManager.createTextureImages(texturePath, NO_IMAGE, NO_IMAGE, NO_IMAGE, NO_IMAGE, NO_IMAGE, NO_IMAGE, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, renderer.commandPool, renderer.graphicsQueue);
   textureManager.createTextureImageView(renderer.deviceManager.device);
   textureManager.createTextureSampler(renderer.deviceManager.device, renderer.deviceManager.physicalDevice);
 
@@ -26,7 +27,8 @@ void AnimatedMesh::initGraphics(Renderer &renderer, std::string texturePath)
 
   renderer.bufferManager.createUniformBuffers(renderer.MAX_FRAMES_IN_FLIGHT, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, 1);
 
-  renderer.descriptorManager.addDescriptorSets(renderer.deviceManager.device, renderer.MAX_FRAMES_IN_FLIGHT, 1, textureManager.textureImageView, textureManager.textureSampler);
+  TextureMaps textureMaps(textureManager.albedoImageView, textureManager.albedoSampler, textureManager.normalImageView, textureManager.normalSampler, textureManager.heightImageView, textureManager.heightSampler, textureManager.roughnessImageView, textureManager.roughnessSampler, textureManager.metallicImageView, textureManager.metallicSampler, textureManager.aoImageView, textureManager.aoSampler, textureManager.emissiveImageView, textureManager.emissiveSampler);
+  renderer.descriptorManager.addDescriptorSets(renderer.deviceManager.device, renderer.MAX_FRAMES_IN_FLIGHT, 1, textureMaps);
   renderer.bufferManager.createAnimationUniformBuffers(renderer.MAX_FRAMES_IN_FLIGHT, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, 1, id);
 
   renderer.descriptorManager.addAnimDescriptorSets(renderer.deviceManager.device, renderer.MAX_FRAMES_IN_FLIGHT, 1, id);

@@ -11,22 +11,23 @@ layout(set = 1, binding = 0) uniform AnimatedUniformBufferObject {
 } animUbo;
 
 layout(push_constant) uniform MaterialData {
-    vec3 ambientColor;
-    vec3 diffuseColor;
-    vec3 specularColor;
-    vec3 emissionColor;
-    float shininess;
+    vec3 albedoColor;
+    float metallic;
+
+    float roughness;
+    float ao;
     float opacity;
-    float refractiveIndex;
+    float emissiveStrength;
 
-    int illuminationModel;
-    int isParticle;
-
-    int hasDiffuseMap;
+    int hasAlbedoMap;
     int hasNormalMap;
     int hasHeightMap;
-    int hasSpecularMap;
-    int hasShininessMap;
+    int hasRoughnessMap;
+    int hasMetallicMap;
+    int hasAOMap;
+    int hasEmissiveMap;
+
+    int isParticle;
 } material;
 
 layout(location = 0) in vec3 inPosition;
@@ -37,7 +38,7 @@ layout(location = 4) in uvec4 inBoneIDs;
 layout(location = 5) in vec4 inBoneWeights;
 
 layout(location = 0) out vec2 fragTexCoord;
-layout(location = 1) out vec4 diffuseColor;
+layout(location = 1) out vec4 vertexColor;
 layout(location = 2) out vec3 fragNormal;
 layout(location = 3) out vec3 viewPos;
 layout(location = 4) out vec3 fragPos;
@@ -55,9 +56,9 @@ void main() {
     //vec4 worldPos = ubo.model * vec4(inPosition, 1.0);
     gl_Position = ubo.proj * ubo.view * worldPos;
 
-    diffuseColor = vec4(material.diffuseColor, 1);
-    if((inColor.x > 0 || inColor.y > 0 || inColor.z > 0) && diffuseColor.x == 0 && diffuseColor.y == 0 && diffuseColor.z == 0) {
-        diffuseColor = vec4(inColor, 1);
+    vertexColor = vec4(material.albedoColor, 1);
+    if((inColor.x > 0 || inColor.y > 0 || inColor.z > 0) && vertexColor.x == 0 && vertexColor.y == 0 && vertexColor.z == 0) {
+        vertexColor = vec4(inColor, 1);
     }
     fragTexCoord = inTexCoord;
     if(inNormal.x < 0 && inNormal.y < 0 && inNormal.z < 0) {

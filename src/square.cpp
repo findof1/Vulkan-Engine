@@ -19,7 +19,7 @@ Square::Square(Renderer &renderer, int *nextRenderingId, glm::vec3 position, std
 
 void Square::initGraphics(Renderer &renderer, std::string texture)
 {
-  textureManager.createTextureImage(texture, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, renderer.commandPool, renderer.graphicsQueue);
+  textureManager.createTextureImages(texture, NO_IMAGE, NO_IMAGE, NO_IMAGE, NO_IMAGE, NO_IMAGE, NO_IMAGE, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, renderer.commandPool, renderer.graphicsQueue);
   textureManager.createTextureImageView(renderer.deviceManager.device);
   textureManager.createTextureSampler(renderer.deviceManager.device, renderer.deviceManager.physicalDevice);
 
@@ -27,12 +27,13 @@ void Square::initGraphics(Renderer &renderer, std::string texture)
 
   renderer.bufferManager.createUniformBuffers(renderer.MAX_FRAMES_IN_FLIGHT, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, 1);
 
-  renderer.descriptorManager.addDescriptorSets(renderer.deviceManager.device, renderer.MAX_FRAMES_IN_FLIGHT, 1, textureManager.textureImageView, textureManager.textureSampler);
+  TextureMaps textureMaps(textureManager.albedoImageView, textureManager.albedoSampler, textureManager.normalImageView, textureManager.normalSampler, textureManager.heightImageView, textureManager.heightSampler, textureManager.roughnessImageView, textureManager.roughnessSampler, textureManager.metallicImageView, textureManager.metallicSampler, textureManager.aoImageView, textureManager.aoSampler, textureManager.emissiveImageView, textureManager.emissiveSampler);
+  renderer.descriptorManager.addDescriptorSets(renderer.deviceManager.device, renderer.MAX_FRAMES_IN_FLIGHT, 1, textureMaps);
 }
 
 void Square::initGraphics(Renderer &renderer)
 {
-  textureManager.createTextureImage(NO_IMAGE, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, renderer.commandPool, renderer.graphicsQueue);
+  textureManager.createTextureImages(NO_IMAGE, NO_IMAGE, NO_IMAGE, NO_IMAGE, NO_IMAGE, NO_IMAGE, NO_IMAGE, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, renderer.commandPool, renderer.graphicsQueue);
   textureManager.createTextureImageView(renderer.deviceManager.device);
   textureManager.createTextureSampler(renderer.deviceManager.device, renderer.deviceManager.physicalDevice);
 
@@ -40,7 +41,8 @@ void Square::initGraphics(Renderer &renderer)
 
   renderer.bufferManager.createUniformBuffers(renderer.MAX_FRAMES_IN_FLIGHT, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, 1);
 
-  renderer.descriptorManager.addDescriptorSets(renderer.deviceManager.device, renderer.MAX_FRAMES_IN_FLIGHT, 1, textureManager.textureImageView, textureManager.textureSampler);
+  TextureMaps textureMaps(textureManager.albedoImageView, textureManager.albedoSampler, textureManager.normalImageView, textureManager.normalSampler, textureManager.heightImageView, textureManager.heightSampler, textureManager.roughnessImageView, textureManager.roughnessSampler, textureManager.metallicImageView, textureManager.metallicSampler, textureManager.aoImageView, textureManager.aoSampler, textureManager.emissiveImageView, textureManager.emissiveSampler);
+  renderer.descriptorManager.addDescriptorSets(renderer.deviceManager.device, renderer.MAX_FRAMES_IN_FLIGHT, 1, textureMaps);
 }
 
 void Square::draw(Renderer *renderer, int currentFrame, glm::mat4 transformation, glm::mat4 view, glm::mat4 projectionMatrix, VkCommandBuffer commandBuffer)
@@ -57,8 +59,8 @@ void Square::draw(Renderer *renderer, int currentFrame, glm::mat4 transformation
   renderer->bufferManager.updateUniformBuffer(currentFrame + id * renderer->MAX_FRAMES_IN_FLIGHT, transformation, view, projectionMatrix);
 
   MaterialData materialData;
-  materialData.diffuseColor = color;
-  materialData.hasDiffuseMap = hasTexture;
+  materialData.albedoColor = color;
+  materialData.hasAlbedoMap = hasTexture;
 
   vkCmdPushConstants(commandBuffer, renderer->pipelineManager.pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MaterialData), &materialData);
 

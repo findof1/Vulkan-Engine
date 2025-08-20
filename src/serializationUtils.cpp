@@ -115,29 +115,41 @@ void readTransforms(std::ifstream &in, std::unordered_map<Entity, TransformCompo
 
 void writeMaterialData(std::ofstream &out, const MaterialData &mat)
 {
-  writeVec3(out, mat.ambientColor);
-  writeVec3(out, mat.diffuseColor);
-  writeVec3(out, mat.specularColor);
-  writeVec3(out, mat.emissionColor);
-  writeFloat(out, mat.shininess);
+  writeVec3(out, mat.albedoColor);
+  writeFloat(out, mat.metallic);
+  writeFloat(out, mat.roughness);
+  writeFloat(out, mat.ao);
   writeFloat(out, mat.opacity);
-  writeFloat(out, mat.refractiveIndex);
-  writeInt(out, mat.illuminationModel);
-  writeInt(out, mat.hasDiffuseMap);
+  writeFloat(out, mat.emissiveStrength);
+
+  writeInt(out, mat.hasAlbedoMap);
+  writeInt(out, mat.hasNormalMap);
+  writeInt(out, mat.hasHeightMap);
+  writeInt(out, mat.hasRoughnessMap);
+  writeInt(out, mat.hasMetallicMap);
+  writeInt(out, mat.hasAOMap);
+  writeInt(out, mat.hasEmissiveMap);
+
   writeInt(out, mat.isParticle);
 }
 
 void readMaterialData(std::ifstream &in, MaterialData &mat)
 {
-  readVec3(in, mat.ambientColor);
-  readVec3(in, mat.diffuseColor);
-  readVec3(in, mat.specularColor);
-  readVec3(in, mat.emissionColor);
-  readFloat(in, mat.shininess);
+  readVec3(in, mat.albedoColor);
+  readFloat(in, mat.metallic);
+  readFloat(in, mat.roughness);
+  readFloat(in, mat.ao);
   readFloat(in, mat.opacity);
-  readFloat(in, mat.refractiveIndex);
-  readInt(in, mat.illuminationModel);
-  readInt(in, mat.hasDiffuseMap);
+  readFloat(in, mat.emissiveStrength);
+
+  readInt(in, mat.hasAlbedoMap);
+  readInt(in, mat.hasNormalMap);
+  readInt(in, mat.hasHeightMap);
+  readInt(in, mat.hasRoughnessMap);
+  readInt(in, mat.hasMetallicMap);
+  readInt(in, mat.hasAOMap);
+  readInt(in, mat.hasEmissiveMap);
+
   readInt(in, mat.isParticle);
 }
 

@@ -6,22 +6,23 @@
 
 struct MaterialData
 {
-  alignas(16) glm::vec3 ambientColor = glm::vec3(0.1f, 0.1f, 0.1f);
-  alignas(16) glm::vec3 diffuseColor = glm::vec3(1.0f, 1.0f, 1.0f);
-  alignas(16) glm::vec3 specularColor = glm::vec3(0.5f, 0.5f, 0.5f);
-  alignas(16) glm::vec3 emissionColor = glm::vec3(0.0f, 0.0f, 0.0f);
-  float shininess = 32.0f;
+  alignas(16) glm::vec3 albedoColor = glm::vec3(1.0f);
+  float metallic = 0.0f;
+
+  float roughness = 1.0f;
+  float ao = 1.0f;
   float opacity = 1.0f;
-  float refractiveIndex = 1.45f;
+  float emissiveStrength = 0.0f;
 
-  int illuminationModel = 2;
-  int isParticle = 0;
-
-  int hasDiffuseMap = 0;
+  int hasAlbedoMap = 0;
   int hasNormalMap = 0;
   int hasHeightMap = 0;
-  int hasSpecularMap = 0;
-  int hasShininessMap = 0;
+  int hasRoughnessMap = 0;
+  int hasMetallicMap = 0;
+  int hasAOMap = 0;
+  int hasEmissiveMap = 0;
+
+  int isParticle = 0;
 };
 
 class TextureManager;

@@ -13,12 +13,54 @@ void DescriptorManager::createDescriptorSetLayout(VkDevice device)
   uboLayoutBinding.descriptorCount = 1;
   uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-  VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-  samplerLayoutBinding.binding = 1;
-  samplerLayoutBinding.descriptorCount = 1;
-  samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  samplerLayoutBinding.pImmutableSamplers = nullptr;
-  samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+  VkDescriptorSetLayoutBinding albedoSamplerLayoutBinding{};
+  albedoSamplerLayoutBinding.binding = 1;
+  albedoSamplerLayoutBinding.descriptorCount = 1;
+  albedoSamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  albedoSamplerLayoutBinding.pImmutableSamplers = nullptr;
+  albedoSamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+  VkDescriptorSetLayoutBinding normalSamplerLayoutBinding{};
+  normalSamplerLayoutBinding.binding = 2;
+  normalSamplerLayoutBinding.descriptorCount = 1;
+  normalSamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  normalSamplerLayoutBinding.pImmutableSamplers = nullptr;
+  normalSamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+  VkDescriptorSetLayoutBinding heightSamplerLayoutBinding{};
+  heightSamplerLayoutBinding.binding = 3;
+  heightSamplerLayoutBinding.descriptorCount = 1;
+  heightSamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  heightSamplerLayoutBinding.pImmutableSamplers = nullptr;
+  heightSamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+  VkDescriptorSetLayoutBinding roughnessSamplerLayoutBinding{};
+  roughnessSamplerLayoutBinding.binding = 4;
+  roughnessSamplerLayoutBinding.descriptorCount = 1;
+  roughnessSamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  roughnessSamplerLayoutBinding.pImmutableSamplers = nullptr;
+  roughnessSamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+  VkDescriptorSetLayoutBinding metallicSamplerLayoutBinding{};
+  metallicSamplerLayoutBinding.binding = 5;
+  metallicSamplerLayoutBinding.descriptorCount = 1;
+  metallicSamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  metallicSamplerLayoutBinding.pImmutableSamplers = nullptr;
+  metallicSamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+  VkDescriptorSetLayoutBinding aoSamplerLayoutBinding{};
+  aoSamplerLayoutBinding.binding = 6;
+  aoSamplerLayoutBinding.descriptorCount = 1;
+  aoSamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  aoSamplerLayoutBinding.pImmutableSamplers = nullptr;
+  aoSamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+  VkDescriptorSetLayoutBinding emissiveSamplerLayoutBinding{};
+  emissiveSamplerLayoutBinding.binding = 7;
+  emissiveSamplerLayoutBinding.descriptorCount = 1;
+  emissiveSamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  emissiveSamplerLayoutBinding.pImmutableSamplers = nullptr;
+  emissiveSamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
   VkDescriptorSetLayoutBinding computeUboLayoutBinding{};
   computeUboLayoutBinding.binding = 0;
@@ -40,7 +82,7 @@ void DescriptorManager::createDescriptorSetLayout(VkDevice device)
   computeLayoutBinding2.pImmutableSamplers = nullptr;
   computeLayoutBinding2.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
 
-  std::array<VkDescriptorSetLayoutBinding, 2> bindings = {uboLayoutBinding, samplerLayoutBinding};
+  std::array<VkDescriptorSetLayoutBinding, 8> bindings = {uboLayoutBinding, albedoSamplerLayoutBinding, normalSamplerLayoutBinding, heightSamplerLayoutBinding, roughnessSamplerLayoutBinding, metallicSamplerLayoutBinding, aoSamplerLayoutBinding, emissiveSamplerLayoutBinding};
   VkDescriptorSetLayoutCreateInfo layoutInfo{};
   layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
   layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
@@ -104,7 +146,7 @@ void DescriptorManager::createDescriptorPool(VkDevice device, int MAX_FRAMES_IN_
   }
 }
 
-void DescriptorManager::createDescriptorSets(VkDevice device, int MAX_FRAMES_IN_FLIGHT, int count, VkImageView textureImageView, VkSampler textureSampler)
+void DescriptorManager::createDescriptorSets(VkDevice device, int MAX_FRAMES_IN_FLIGHT, int count, TextureMaps textureMaps)
 {
   std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT * count, descriptorSetLayout);
   VkDescriptorSetAllocateInfo allocInfo{};
@@ -126,12 +168,42 @@ void DescriptorManager::createDescriptorSets(VkDevice device, int MAX_FRAMES_IN_
     bufferInfo.offset = 0;
     bufferInfo.range = sizeof(UniformBufferObject);
 
-    VkDescriptorImageInfo imageInfo{};
-    imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    imageInfo.imageView = textureImageView;
-    imageInfo.sampler = textureSampler;
+    VkDescriptorImageInfo albedoInfo{};
+    albedoInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    albedoInfo.imageView = textureMaps.albedoImageView;
+    albedoInfo.sampler = textureMaps.albedoSampler;
 
-    std::array<VkWriteDescriptorSet, 4> descriptorWrites{};
+    VkDescriptorImageInfo normalInfo{};
+    normalInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    normalInfo.imageView = textureMaps.normalImageView;
+    normalInfo.sampler = textureMaps.normalSampler;
+
+    VkDescriptorImageInfo heightInfo{};
+    heightInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    heightInfo.imageView = textureMaps.heightImageView;
+    heightInfo.sampler = textureMaps.heightSampler;
+
+    VkDescriptorImageInfo roughnessInfo{};
+    roughnessInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    roughnessInfo.imageView = textureMaps.roughnessImageView;
+    roughnessInfo.sampler = textureMaps.roughnessSampler;
+
+    VkDescriptorImageInfo metallicInfo{};
+    metallicInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    metallicInfo.imageView = textureMaps.metallicImageView;
+    metallicInfo.sampler = textureMaps.metallicSampler;
+
+    VkDescriptorImageInfo aoInfo{};
+    aoInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    aoInfo.imageView = textureMaps.aoImageView;
+    aoInfo.sampler = textureMaps.aoSampler;
+
+    VkDescriptorImageInfo emissiveInfo{};
+    emissiveInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    emissiveInfo.imageView = textureMaps.emissiveImageView;
+    emissiveInfo.sampler = textureMaps.emissiveSampler;
+
+    std::array<VkWriteDescriptorSet, 8> descriptorWrites{};
 
     descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     descriptorWrites[0].dstSet = descriptorSets[i];
@@ -147,7 +219,55 @@ void DescriptorManager::createDescriptorSets(VkDevice device, int MAX_FRAMES_IN_
     descriptorWrites[1].dstArrayElement = 0;
     descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     descriptorWrites[1].descriptorCount = 1;
-    descriptorWrites[1].pImageInfo = &imageInfo;
+    descriptorWrites[1].pImageInfo = &albedoInfo;
+
+    descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrites[2].dstSet = descriptorSets[i];
+    descriptorWrites[2].dstBinding = 2;
+    descriptorWrites[2].dstArrayElement = 0;
+    descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    descriptorWrites[2].descriptorCount = 1;
+    descriptorWrites[2].pImageInfo = &normalInfo;
+
+    descriptorWrites[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrites[3].dstSet = descriptorSets[i];
+    descriptorWrites[3].dstBinding = 3;
+    descriptorWrites[3].dstArrayElement = 0;
+    descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    descriptorWrites[3].descriptorCount = 1;
+    descriptorWrites[3].pImageInfo = &heightInfo;
+
+    descriptorWrites[4].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrites[4].dstSet = descriptorSets[i];
+    descriptorWrites[4].dstBinding = 4;
+    descriptorWrites[4].dstArrayElement = 0;
+    descriptorWrites[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    descriptorWrites[4].descriptorCount = 1;
+    descriptorWrites[4].pImageInfo = &roughnessInfo;
+
+    descriptorWrites[5].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrites[5].dstSet = descriptorSets[i];
+    descriptorWrites[5].dstBinding = 5;
+    descriptorWrites[5].dstArrayElement = 0;
+    descriptorWrites[5].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    descriptorWrites[5].descriptorCount = 1;
+    descriptorWrites[5].pImageInfo = &metallicInfo;
+
+    descriptorWrites[6].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrites[6].dstSet = descriptorSets[i];
+    descriptorWrites[6].dstBinding = 6;
+    descriptorWrites[6].dstArrayElement = 0;
+    descriptorWrites[6].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    descriptorWrites[6].descriptorCount = 1;
+    descriptorWrites[6].pImageInfo = &aoInfo;
+
+    descriptorWrites[7].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrites[7].dstSet = descriptorSets[i];
+    descriptorWrites[7].dstBinding = 7;
+    descriptorWrites[7].dstArrayElement = 0;
+    descriptorWrites[7].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    descriptorWrites[7].descriptorCount = 1;
+    descriptorWrites[7].pImageInfo = &emissiveInfo;
 
     vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
   }
@@ -283,7 +403,7 @@ void DescriptorManager::addComputeDescriptorSets(VkDevice device, int MAX_FRAMES
   computeDescriptorSets.insert(computeDescriptorSets.end(), newComputeDescriptorSets.begin(), newComputeDescriptorSets.end());
 }
 
-void DescriptorManager::addDescriptorSets(VkDevice device, int MAX_FRAMES_IN_FLIGHT, int count, VkImageView textureImageView, VkSampler textureSampler)
+void DescriptorManager::addDescriptorSets(VkDevice device, int MAX_FRAMES_IN_FLIGHT, int count, TextureMaps textureMaps)
 {
   std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT * count, descriptorSetLayout);
   VkDescriptorSetAllocateInfo allocInfo{};
@@ -307,12 +427,42 @@ void DescriptorManager::addDescriptorSets(VkDevice device, int MAX_FRAMES_IN_FLI
     bufferInfo.offset = 0;
     bufferInfo.range = sizeof(UniformBufferObject);
 
-    VkDescriptorImageInfo imageInfo{};
-    imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    imageInfo.imageView = textureImageView;
-    imageInfo.sampler = textureSampler;
+    VkDescriptorImageInfo albedoInfo{};
+    albedoInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    albedoInfo.imageView = textureMaps.albedoImageView;
+    albedoInfo.sampler = textureMaps.albedoSampler;
 
-    std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+    VkDescriptorImageInfo normalInfo{};
+    normalInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    normalInfo.imageView = textureMaps.normalImageView;
+    normalInfo.sampler = textureMaps.normalSampler;
+
+    VkDescriptorImageInfo heightInfo{};
+    heightInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    heightInfo.imageView = textureMaps.heightImageView;
+    heightInfo.sampler = textureMaps.heightSampler;
+
+    VkDescriptorImageInfo roughnessInfo{};
+    roughnessInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    roughnessInfo.imageView = textureMaps.roughnessImageView;
+    roughnessInfo.sampler = textureMaps.roughnessSampler;
+
+    VkDescriptorImageInfo metallicInfo{};
+    metallicInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    metallicInfo.imageView = textureMaps.metallicImageView;
+    metallicInfo.sampler = textureMaps.metallicSampler;
+
+    VkDescriptorImageInfo aoInfo{};
+    aoInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    aoInfo.imageView = textureMaps.aoImageView;
+    aoInfo.sampler = textureMaps.aoSampler;
+
+    VkDescriptorImageInfo emissiveInfo{};
+    emissiveInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    emissiveInfo.imageView = textureMaps.emissiveImageView;
+    emissiveInfo.sampler = textureMaps.emissiveSampler;
+
+    std::array<VkWriteDescriptorSet, 8> descriptorWrites{};
 
     descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     descriptorWrites[0].dstSet = newDescriptorSets[i];
@@ -328,7 +478,55 @@ void DescriptorManager::addDescriptorSets(VkDevice device, int MAX_FRAMES_IN_FLI
     descriptorWrites[1].dstArrayElement = 0;
     descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     descriptorWrites[1].descriptorCount = 1;
-    descriptorWrites[1].pImageInfo = &imageInfo;
+    descriptorWrites[1].pImageInfo = &albedoInfo;
+
+    descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrites[2].dstSet = newDescriptorSets[i];
+    descriptorWrites[2].dstBinding = 2;
+    descriptorWrites[2].dstArrayElement = 0;
+    descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    descriptorWrites[2].descriptorCount = 1;
+    descriptorWrites[2].pImageInfo = &normalInfo;
+
+    descriptorWrites[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrites[3].dstSet = newDescriptorSets[i];
+    descriptorWrites[3].dstBinding = 3;
+    descriptorWrites[3].dstArrayElement = 0;
+    descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    descriptorWrites[3].descriptorCount = 1;
+    descriptorWrites[3].pImageInfo = &heightInfo;
+
+    descriptorWrites[4].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrites[4].dstSet = newDescriptorSets[i];
+    descriptorWrites[4].dstBinding = 4;
+    descriptorWrites[4].dstArrayElement = 0;
+    descriptorWrites[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    descriptorWrites[4].descriptorCount = 1;
+    descriptorWrites[4].pImageInfo = &roughnessInfo;
+
+    descriptorWrites[5].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrites[5].dstSet = newDescriptorSets[i];
+    descriptorWrites[5].dstBinding = 5;
+    descriptorWrites[5].dstArrayElement = 0;
+    descriptorWrites[5].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    descriptorWrites[5].descriptorCount = 1;
+    descriptorWrites[5].pImageInfo = &metallicInfo;
+
+    descriptorWrites[6].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrites[6].dstSet = newDescriptorSets[i];
+    descriptorWrites[6].dstBinding = 6;
+    descriptorWrites[6].dstArrayElement = 0;
+    descriptorWrites[6].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    descriptorWrites[6].descriptorCount = 1;
+    descriptorWrites[6].pImageInfo = &aoInfo;
+
+    descriptorWrites[7].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrites[7].dstSet = newDescriptorSets[i];
+    descriptorWrites[7].dstBinding = 7;
+    descriptorWrites[7].dstArrayElement = 0;
+    descriptorWrites[7].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    descriptorWrites[7].descriptorCount = 1;
+    descriptorWrites[7].pImageInfo = &emissiveInfo;
 
     vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
   }

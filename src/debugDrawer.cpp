@@ -44,8 +44,8 @@ void VulkanDebugDrawer::drawDebugLines(VkCommandBuffer commandBuffer, const std:
   renderer.bufferManager.updateUniformBuffer(currentFrame + buffersIndex * renderer.MAX_FRAMES_IN_FLIGHT, glm::mat4(1), viewMatrix, projectionMatrix);
 
   MaterialData materialData;
-  materialData.diffuseColor = glm::vec3(0);
-  materialData.hasDiffuseMap = false;
+  materialData.albedoColor = glm::vec3(0);
+  materialData.hasAlbedoMap = false;
   materialData.isParticle = false;
 
   vkCmdPushConstants(
@@ -60,12 +60,13 @@ void VulkanDebugDrawer::drawDebugLines(VkCommandBuffer commandBuffer, const std:
 }
 VulkanDebugDrawer::VulkanDebugDrawer(Renderer &renderer, int &buffersIndex, bool debug) : debugMode(debug ? 1 : 0), renderer(renderer), buffersIndex(buffersIndex), textureManager(renderer.bufferManager, renderer)
 {
-  textureManager.createTextureImage(NO_IMAGE, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, renderer.commandPool, renderer.graphicsQueue);
+  textureManager.createTextureImages(NO_IMAGE, NO_IMAGE, NO_IMAGE, NO_IMAGE, NO_IMAGE, NO_IMAGE, NO_IMAGE, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, renderer.commandPool, renderer.graphicsQueue);
   textureManager.createTextureImageView(renderer.deviceManager.device);
   textureManager.createTextureSampler(renderer.deviceManager.device, renderer.deviceManager.physicalDevice);
 
   renderer.bufferManager.createUniformBuffers(renderer.MAX_FRAMES_IN_FLIGHT, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, 1);
 
-  renderer.descriptorManager.addDescriptorSets(renderer.deviceManager.device, renderer.MAX_FRAMES_IN_FLIGHT, 1, textureManager.textureImageView, textureManager.textureSampler);
+  TextureMaps textureMaps(textureManager.albedoImageView, textureManager.albedoSampler, textureManager.normalImageView, textureManager.normalSampler, textureManager.heightImageView, textureManager.heightSampler, textureManager.roughnessImageView, textureManager.roughnessSampler, textureManager.metallicImageView, textureManager.metallicSampler, textureManager.aoImageView, textureManager.aoSampler, textureManager.emissiveImageView, textureManager.emissiveSampler);
+  renderer.descriptorManager.addDescriptorSets(renderer.deviceManager.device, renderer.MAX_FRAMES_IN_FLIGHT, 1, textureMaps);
   buffersIndex++;
 }

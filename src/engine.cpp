@@ -561,8 +561,8 @@ void Engine::createAnimatedModelFromFile(std::string baseName, std::string path,
           }
 
           MaterialData meshMaterial;
-          meshMaterial.hasDiffuseMap = false;
-          meshMaterial.diffuseColor = glm::vec3(1);
+          meshMaterial.hasAlbedoMap = false;
+          meshMaterial.albedoColor = glm::vec3(1);
           std::string textureName = NO_IMAGE;
 
           if (primitive.material >= 0)
@@ -578,7 +578,7 @@ void Engine::createAnimatedModelFromFile(std::string baseName, std::string path,
                 const tinygltf::Image &image = model.images[texture.source];
 
                 textureName = texturesDir + image.uri;
-                meshMaterial.hasDiffuseMap = true;
+                meshMaterial.hasAlbedoMap = true;
               }
             }
           }
@@ -794,8 +794,8 @@ void Engine::addMeshComponent(Entity entity, const std::string objPath, const st
       meshIndices.push_back(static_cast<uint32_t>(meshIndices.size()));
     }
     MaterialData material;
-    material.diffuseColor = {0.5f, 0.5f, 0.5f};
-    material.hasDiffuseMap = 1;
+    material.albedoColor = {0.5f, 0.5f, 0.5f};
+    material.hasAlbedoMap = 1;
     std::string texturePath = "";
     std::string fullPath = "";
 
@@ -813,36 +813,28 @@ void Engine::addMeshComponent(Entity entity, const std::string objPath, const st
         fullPath = mtlPath + texturePath;
       }
 
-      material.diffuseColor = {
+      material.albedoColor = {
           materials[matId].diffuse[0],
           materials[matId].diffuse[1],
           materials[matId].diffuse[2]};
 
-      material.specularColor = {
-          materials[matId].specular[0],
-          materials[matId].specular[1],
-          materials[matId].specular[2]};
+      material.metallic = 0.0f;
 
-      material.ambientColor = {
-          materials[matId].ambient[0],
-          materials[matId].ambient[1],
-          materials[matId].ambient[2]};
+      material.ao = 1.0f;
 
-      material.shininess = materials[matId].shininess;
-      material.emissionColor = {
-          materials[matId].emission[0],
-          materials[matId].emission[1],
-          materials[matId].emission[2]};
+      material.roughness = 1.0f - glm::clamp(materials[matId].shininess / 256.0f, 0.0f, 1.0f);
 
-      material.refractiveIndex = materials[matId].ior;
-      material.illuminationModel = materials[matId].illum;
+      // material.emissionColor = {
+      //     materials[matId].emission[0],
+      //     materials[matId].emission[1],
+      //     materials[matId].emission[2]};
 
       material.opacity = (materials[matId].diffuse[3] != 0) ? materials[matId].diffuse[3] : 1.0f;
     }
 
     if (texturePath.empty())
     {
-      material.hasDiffuseMap = 0;
+      material.hasAlbedoMap = 0;
       fullPath = NO_IMAGE;
     }
 

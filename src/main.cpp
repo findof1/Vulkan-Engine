@@ -66,8 +66,8 @@ int main()
         engine.useFreeCamMode(true);
 
         MaterialData ground;
-        ground.diffuseColor = {0.5, 0.5, 0.5};
-        ground.hasDiffuseMap = 1;
+        ground.albedoColor = {0.5, 0.5, 0.5};
+        ground.hasAlbedoMap = 1;
 
         Entity skyBox = engine.createEmptyGameObject("skyBox");
         engine.addMeshComponent(skyBox, ground, "Assets/textures/sky.png", cubeVerticesNoNormals, skyBoxIndices);
