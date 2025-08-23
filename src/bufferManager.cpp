@@ -35,6 +35,22 @@ void BufferManager::createUniformBuffers(int MAX_FRAMES_IN_FLIGHT, VkDevice devi
   }
 }
 
+void BufferManager::createLightsUniformBuffers(int MAX_FRAMES_IN_FLIGHT, VkDevice device, VkPhysicalDevice physicalDevice)
+{
+  VkDeviceSize bufferSize = sizeof(LightsUBO);
+
+  lightsUBO.resize(lightsUBO.size() + MAX_FRAMES_IN_FLIGHT);
+  lightsUBOMemory.resize(lightsUBOMemory.size() + MAX_FRAMES_IN_FLIGHT);
+  lightsUBOMapped.resize(lightsUBOMapped.size() + MAX_FRAMES_IN_FLIGHT);
+
+  for (size_t i = lightsUBO.size() - MAX_FRAMES_IN_FLIGHT; i < lightsUBO.size(); i++)
+  {
+    createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, lightsUBO[i], lightsUBOMemory[i], device, physicalDevice);
+
+    vkMapMemory(device, lightsUBOMemory[i], 0, bufferSize, 0, &lightsUBOMapped[i]);
+  }
+}
+
 void BufferManager::createAnimationUniformBuffers(int MAX_FRAMES_IN_FLIGHT, VkDevice device, VkPhysicalDevice physicalDevice, int count, int startingId)
 {
   VkDeviceSize bufferSize = sizeof(AnimatedUniformBufferObject);
@@ -397,6 +413,23 @@ void BufferManager::updateUniformBuffer(uint32_t currentImage, glm::mat4 transfo
   ubo.proj[1][1] *= -1;
 
   memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
+}
+
+void BufferManager::updateLightsUniformBuffer(uint32_t currentImage, const std::vector<Light> &lights, const glm::vec3 &cameraPos)
+{
+  LightsUBO lightsUbo{};
+
+  for (size_t i = 0; i < lights.size() && i < MAX_LIGHTS; i++)
+  {
+    lightsUbo.lights[i].position = glm::vec4(lights[i].position, 1.0f);
+    lightsUbo.lights[i].color = glm::vec4(lights[i].color, 1.0f);
+    lightsUbo.lights[i].intensity = lights[i].intensity;
+  }
+  lightsUbo.lightsCount = (int)lights.size();
+
+  lightsUbo.cameraPos = glm::vec3(cameraPos);
+
+  memcpy(lightsUBOMapped[currentImage], &lightsUbo, sizeof(lightsUbo));
 }
 
 void BufferManager::updateAnimationUniformBuffer(uint32_t currentImage, std::array<glm::mat4, 100> &boneMatrices)

@@ -14,10 +14,10 @@ Mesh::Mesh(Renderer &renderer, int *nextRenderingId, MaterialData newMaterial, c
   (*nextRenderingId)++;
 }
 
-void Mesh::initGraphics(Renderer &renderer, std::string texturePath)
+void Mesh::initGraphics(Renderer &renderer, std::string texturePath, std::string normalPath, std::string heightPath, std::string roughnessPath, std::string metallicPath, std::string aoPath, std::string emissivePath)
 {
   texPath = texturePath;
-  textureManager.createTextureImages(texturePath, NO_IMAGE, NO_IMAGE, NO_IMAGE, NO_IMAGE, NO_IMAGE, NO_IMAGE, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, renderer.commandPool, renderer.graphicsQueue);
+  textureManager.createTextureImages(texturePath, normalPath, heightPath, roughnessPath, metallicPath, aoPath, emissivePath, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, renderer.commandPool, renderer.graphicsQueue);
   textureManager.createTextureImageView(renderer.deviceManager.device);
   textureManager.createTextureSampler(renderer.deviceManager.device, renderer.deviceManager.physicalDevice);
 

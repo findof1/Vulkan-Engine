@@ -69,8 +69,13 @@ int main()
         ground.albedoColor = {0.5, 0.5, 0.5};
         ground.hasAlbedoMap = 1;
 
+        MaterialData sky;
+        sky.albedoColor = {0.5, 0.5, 0.5};
+        sky.hasAlbedoMap = 1;
+        sky.isSkybox = 1;
+
         Entity skyBox = engine.createEmptyGameObject("skyBox");
-        engine.addMeshComponent(skyBox, ground, "Assets/textures/sky.png", cubeVerticesNoNormals, skyBoxIndices);
+        engine.addMeshComponent(skyBox, sky, "Assets/textures/sky.png", cubeVerticesNoNormals, skyBoxIndices);
         TransformComponent &transformSky = engine.getTransformComponent(skyBox);
         transformSky.scale = glm::vec3(1000, 1000, 1000);
         transformSky.position = glm::vec3(0, 0, 0);
@@ -111,7 +116,7 @@ int main()
         engine.addRigidBodyComponent(object4);
 
         Entity couch = engine.createEmptyGameObject("couch");
-        engine.addMeshComponent(couch, "Assets/models/couch/couch1.obj", "Assets/models/couch/couch1.mtl");
+        engine.addMeshComponent(couch, "Assets/models/couch/couch1.obj", "Assets/models/couch/");
         TransformComponent &transformCouch = engine.getTransformComponent(couch);
         transformCouch.scale = glm::vec3(0.1f, 0.1f, 0.1f);
         transformCouch.position = glm::vec3(10, 100.0f, 10);
@@ -122,8 +127,17 @@ int main()
         engine.updateBoxCollider(couch);
         engine.addRigidBodyComponent(couch);
 
+        Entity stump = engine.createEmptyGameObject("stump");
+        engine.addMeshComponent(stump, "Assets/models/Stump/3DTreeStump001_HQ-4K-PNG.obj", "Assets/models/Stump/");
+        TransformComponent &transformStump = engine.getTransformComponent(stump);
+        transformStump.position = glm::vec3(5.0f, 10.0f, -5.0f);
+
         engine.createAnimatedModelFromFile("AnimationMan", "Assets/models/animationMan/man.gltf", "Assets/models/animationMan/");
         engine.createAnimatedModelFromFile("GLTFMan", "Assets/models/gltfMan/scene.gltf", "Assets/models/gltfMan/");
+        Entity gltfMan = engine.getGameObjectHandle("GLTFMan");
+        TransformComponent &transformMan = engine.getTransformComponent(gltfMan);
+        transformMan.scale = glm::vec3(0.01f, 0.01f, 0.01f);
+
         /*
                 engine.addTextElement("titleText", glm::vec3(10.0f, -100.0f, 0.0f), "Hello, UI!");
 

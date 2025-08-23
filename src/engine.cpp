@@ -16,6 +16,7 @@
 #include "json.hpp"
 #include <glm/gtc/type_ptr.hpp>
 #include <noImage.hpp>
+#include <utils.h>
 
 void Engine::initWindow(std::string windowName)
 {
@@ -175,6 +176,15 @@ void Engine::shutdown()
 void Engine::render()
 {
   renderer.renderQueue.clear();
+
+  std::vector<Light> lights;
+  Light light;
+  light.color = glm::vec3(1, 0, 0);
+  light.intensity = 2;
+  light.position = glm::vec3(0, 5, 10);
+  lights.emplace_back(light);
+  renderer.bufferManager.updateLightsUniformBuffer(renderer.getCurrentFrame(), lights, camera.Position);
+
   glm::mat4 view = camera.getViewMatrix();
   glm::mat4 proj = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH / HEIGHT, 0.1f, 10000.0f);
   glm::mat4 ortho = glm::ortho(0.0f, (float)WIDTH, 0.0f, (float)HEIGHT, -10.0f, 10.0f);
@@ -365,10 +375,6 @@ void Engine::createAnimatedModelFromFile(std::string baseName, std::string path,
     std::cout << "Warn: " << warn << std::endl;
   if (!err.empty())
     std::cerr << "Err: " << err << std::endl;
-
-  std::cout << "Nodes: " << model.nodes.size() << std::endl;
-  std::cout << "Scenes: " << model.scenes.size() << std::endl;
-  std::cout << "Meshes: " << model.meshes.size() << std::endl;
 
   int i = 0;
 
@@ -796,8 +802,14 @@ void Engine::addMeshComponent(Entity entity, const std::string objPath, const st
     MaterialData material;
     material.albedoColor = {0.5f, 0.5f, 0.5f};
     material.hasAlbedoMap = 1;
+    material.hasNormalMap = 1;
+    material.hasAOMap = 1;
     std::string texturePath = "";
     std::string fullPath = "";
+    std::string normalPath = "";
+    std::string fullNormalPath = "";
+    std::string aoPath = "";
+    std::string fullAoPath = "";
 
     if (!materials.empty() && !shape.mesh.material_ids.empty())
     {
@@ -811,6 +823,18 @@ void Engine::addMeshComponent(Entity entity, const std::string objPath, const st
       {
         texturePath = materials[matId].diffuse_texname;
         fullPath = mtlPath + texturePath;
+      }
+
+      if (!materials[matId].bump_texname.empty())
+      {
+        normalPath = materials[matId].bump_texname;
+        fullNormalPath = mtlPath + normalPath;
+      }
+
+      if (!materials[matId].ambient_texname.empty())
+      {
+        aoPath = materials[matId].ambient_texname;
+        fullAoPath = mtlPath + aoPath;
       }
 
       material.albedoColor = {
@@ -829,7 +853,19 @@ void Engine::addMeshComponent(Entity entity, const std::string objPath, const st
       //     materials[matId].emission[1],
       //     materials[matId].emission[2]};
 
-      material.opacity = (materials[matId].diffuse[3] != 0) ? materials[matId].diffuse[3] : 1.0f;
+      material.opacity = (materials[matId].dissolve != 0.0f) ? materials[matId].dissolve : 1.0f;
+    }
+
+    if (normalPath.empty())
+    {
+      material.hasNormalMap = 0;
+      fullNormalPath = NO_IMAGE;
+    }
+
+    if (aoPath.empty())
+    {
+      material.hasAOMap = 0;
+      fullAoPath = NO_IMAGE;
     }
 
     if (texturePath.empty())
@@ -842,7 +878,7 @@ void Engine::addMeshComponent(Entity entity, const std::string objPath, const st
 
     try
     {
-      mesh.initGraphics(renderer, fullPath);
+      mesh.initGraphics(renderer, fullPath, fullNormalPath, NO_IMAGE, NO_IMAGE, NO_IMAGE, fullAoPath, NO_IMAGE);
     }
     catch (const std::exception &e)
     {

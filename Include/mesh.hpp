@@ -3,6 +3,7 @@
 #include <vector>
 #include "vertex.h"
 #include "textureManager.hpp"
+#include "noImage.hpp"
 
 struct MaterialData
 {
@@ -23,6 +24,7 @@ struct MaterialData
   int hasEmissiveMap = 0;
 
   int isParticle = 0;
+  int isSkybox = 0;
 };
 
 class TextureManager;
@@ -40,7 +42,7 @@ public:
   TextureManager textureManager;
 
   Mesh(Renderer &renderer, int *nextRenderingId, MaterialData material, const std::vector<Vertex> &vertices, const std::vector<uint32_t> &indices);
-  void initGraphics(Renderer &renderer, std::string texturePath);
+  void initGraphics(Renderer &renderer, std::string texturePath = NO_IMAGE, std::string normalPath = NO_IMAGE, std::string heightPath = NO_IMAGE, std::string roughnessPath = NO_IMAGE, std::string metallicPath = NO_IMAGE, std::string aoPath = NO_IMAGE, std::string emissivePath = NO_IMAGE);
   void draw(Renderer *renderer, int currentFrame, glm::mat4 transformation, glm::mat4 view, glm::mat4 projectionMatrix, VkCommandBuffer commandBuffer, int colorStageID);
   void cleanup(VkDevice device, Renderer &renderer);
 };

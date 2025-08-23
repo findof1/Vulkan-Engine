@@ -5,6 +5,7 @@
 #include <optional>
 #include <glm/glm.hpp>
 #include <vector>
+#define MAX_LIGHTS 100
 
 struct QueueFamilyIndices
 {
@@ -35,6 +36,20 @@ struct UniformBufferObject
   alignas(16) glm::mat4 model;
   alignas(16) glm::mat4 view;
   alignas(16) glm::mat4 proj;
+};
+
+struct Light
+{
+  alignas(16) glm::vec3 position;
+  alignas(16) glm::vec3 color;
+  float intensity;
+};
+
+struct LightsUBO
+{
+  glm::vec3 cameraPos;
+  int lightsCount;
+  Light lights[MAX_LIGHTS];
 };
 
 struct AnimatedUniformBufferObject

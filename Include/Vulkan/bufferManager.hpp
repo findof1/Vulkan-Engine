@@ -3,6 +3,7 @@
 #include <vector>
 #include <map>
 #include "vertex.h"
+#include "utils.h"
 class BufferManager
 {
 public:
@@ -30,6 +31,10 @@ public:
   std::vector<VkDeviceMemory> uniformBuffersMemory;
   std::vector<void *> uniformBuffersMapped;
 
+  std::vector<VkBuffer> lightsUBO;
+  std::vector<VkDeviceMemory> lightsUBOMemory;
+  std::vector<void *> lightsUBOMapped;
+
   std::map<int, VkBuffer> animatedUniformBuffers;
   std::map<int, VkDeviceMemory> animatedUniformBuffersMemory;
   std::map<int, void *> animatedUniformBuffersMapped;
@@ -38,6 +43,7 @@ public:
   void updateComputeUniformBuffer(uint32_t currentImage, float deltaTime);
 
   void createUniformBuffers(int MAX_FRAMES_IN_FLIGHT, VkDevice device, VkPhysicalDevice physicalDevice, int count);
+  void createLightsUniformBuffers(int MAX_FRAMES_IN_FLIGHT, VkDevice device, VkPhysicalDevice physicalDevice);
   void createAnimationUniformBuffers(int MAX_FRAMES_IN_FLIGHT, VkDevice device, VkPhysicalDevice physicalDevice, int count, int startingId);
 
   void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer, VkDeviceMemory &bufferMemory, VkDevice device, VkPhysicalDevice physicalDevice);
@@ -54,5 +60,6 @@ public:
   void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, VkDevice device, VkCommandPool commandPool, VkQueue graphicsQueue);
   void cleanup(VkDevice device);
   void updateUniformBuffer(uint32_t currentImage, glm::mat4 transformation, glm::mat4 view, glm::mat4 proj);
+  void updateLightsUniformBuffer(uint32_t currentImage, const std::vector<Light> &lights, const glm::vec3 &cameraPos);
   void updateAnimationUniformBuffer(uint32_t currentImage, std::array<glm::mat4, 100> &boneMatrices);
 };
