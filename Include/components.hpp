@@ -13,6 +13,12 @@ struct TransformComponent
   bool justUpdated = true;
 };
 
+struct PointLightComponent
+{
+  glm::vec3 color;
+  int intensity;
+};
+
 struct MeshComponent
 {
   bool hide = false;

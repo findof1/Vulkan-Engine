@@ -17,6 +17,7 @@ public:
   std::unordered_map<Entity, AnimationComponent> animationComponents;
   std::unordered_map<Entity, ParentComponent> parents;
   std::unordered_map<Entity, MeshComponent> meshes;
+  std::unordered_map<Entity, PointLightComponent> pointLights;
   std::unordered_map<Entity, BoxColliderComponent> boxColliders;
   std::unordered_map<Entity, RigidBodyComponent> rigidBodies;
   std::unordered_map<std::string, Entity> entities;

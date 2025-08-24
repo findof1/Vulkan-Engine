@@ -132,6 +132,39 @@ int main()
         TransformComponent &transformStump = engine.getTransformComponent(stump);
         transformStump.position = glm::vec3(5.0f, 10.0f, -5.0f);
 
+        MaterialData red;
+        red.albedoColor = {1, 0, 0};
+        red.hasAlbedoMap = 0;
+        red.isSkybox = true;
+        Entity light1 = engine.createEmptyGameObject("light1");
+        engine.addMeshComponent(light1, red, NO_IMAGE, cubeVertices, cubeIndices);
+        TransformComponent &transformLight1 = engine.getTransformComponent(light1);
+        transformLight1.scale = glm::vec3(0.25f, 0.25f, 0.25f);
+        transformLight1.position = glm::vec3(5, 5.0f, -5);
+        engine.addPointLightComponent(light1, {1, 0, 0}, 100);
+
+        MaterialData green;
+        green.albedoColor = {0, 1, 0};
+        green.hasAlbedoMap = 0;
+        green.isSkybox = true;
+        Entity light2 = engine.createEmptyGameObject("light2");
+        engine.addMeshComponent(light2, green, NO_IMAGE, cubeVertices, cubeIndices);
+        TransformComponent &transformLight2 = engine.getTransformComponent(light2);
+        transformLight2.scale = glm::vec3(0.25f, 0.25f, 0.25f);
+        transformLight2.position = glm::vec3(6, 5.0f, -5);
+        engine.addPointLightComponent(light2, {0, 1, 0}, 100);
+
+        MaterialData blue;
+        blue.albedoColor = {0, 0, 1};
+        blue.hasAlbedoMap = 0;
+        blue.isSkybox = true;
+        Entity light3 = engine.createEmptyGameObject("light3");
+        engine.addMeshComponent(light3, blue, NO_IMAGE, cubeVertices, cubeIndices);
+        TransformComponent &transformLight3 = engine.getTransformComponent(light3);
+        transformLight3.scale = glm::vec3(0.25f, 0.25f, 0.25f);
+        transformLight3.position = glm::vec3(7, 5.0f, -5);
+        engine.addPointLightComponent(light3, {0, 0, 1}, 100);
+
         engine.createAnimatedModelFromFile("AnimationMan", "Assets/models/animationMan/man.gltf", "Assets/models/animationMan/");
         engine.createAnimatedModelFromFile("GLTFMan", "Assets/models/gltfMan/scene.gltf", "Assets/models/gltfMan/");
         Entity gltfMan = engine.getGameObjectHandle("GLTFMan");

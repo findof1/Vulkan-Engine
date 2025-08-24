@@ -178,11 +178,14 @@ void Engine::render()
   renderer.renderQueue.clear();
 
   std::vector<Light> lights;
-  Light light;
-  light.color = glm::vec3(1, 0, 0);
-  light.intensity = 2;
-  light.position = glm::vec3(0, 5, 10);
-  lights.emplace_back(light);
+  for (auto &[e, lightComp] : registry.pointLights)
+  {
+    Light light;
+    light.color = lightComp.color;
+    light.intensity = lightComp.intensity;
+    light.position = getConstTransformComponent(e).position;
+    lights.emplace_back(light);
+  }
   renderer.bufferManager.updateLightsUniformBuffer(renderer.getCurrentFrame(), lights, camera.Position);
 
   glm::mat4 view = camera.getViewMatrix();
@@ -982,6 +985,17 @@ void Engine::addTransformComponent(Entity entity, glm::vec3 position, glm::vec3 
   transformComp.rotationZYX = rotation;
   transformComp.scale = scale;
   registry.transforms.emplace(entity, std::move(transformComp));
+}
+
+void Engine::addPointLightComponent(Entity entity, glm::vec3 color, int intensity)
+{
+  if (registry.pointLights.find(entity) != registry.pointLights.end())
+    return;
+
+  PointLightComponent light;
+  light.color = color;
+  light.intensity = intensity;
+  registry.pointLights.emplace(entity, std::move(light));
 }
 
 void Engine::addBoxColliderComponent(Entity entity, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale)

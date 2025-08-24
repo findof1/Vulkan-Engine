@@ -89,6 +89,7 @@ public:
   void addAnimatedMeshToComponent(Entity entity, MaterialData material, const std::string &texturePath, const std::vector<AnimatedVertex> &vertices, const std::vector<uint32_t> &indices);
   void addSkeletonComponent(Entity entity, std::vector<glm::mat4> inverseBindMatrices, std::vector<int> jointNodeIndices, tinygltf::Model *model, const tinygltf::Node *node);
   void addTransformComponent(Entity entity, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale);
+  void addPointLightComponent(Entity entity, glm::vec3 color, int intensity);
   void addBoxColliderComponent(Entity entity, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale);
   void addBoxColliderComponent(Entity entity);
   void updateBoxCollider(Entity entity, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale);
