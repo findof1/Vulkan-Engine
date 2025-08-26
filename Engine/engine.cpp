@@ -288,7 +288,7 @@ void Engine::loadMaterialAsset(std::string assetName, std::string texturePath, s
   textureManager->createTextureImages(texturePath, normalPath, heightPath, roughnessPath, metallicPath, aoPath, emissivePath, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, renderer.commandPool, renderer.graphicsQueue);
   textureManager->createTextureImageView(renderer.deviceManager.device);
   textureManager->createTextureSampler(renderer.deviceManager.device, renderer.deviceManager.physicalDevice);
-  preloadedTextures.emplace(textureManager);
+  preloadedTextures.emplace(assetName, textureManager);
 }
 
 void Engine::addEmptyMeshComponent(Entity entity)

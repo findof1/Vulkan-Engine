@@ -7,5 +7,4 @@ bin
 .vscode
 socketValues.hpp
 build
-*.txt
 debug
