@@ -279,6 +279,18 @@ void Engine::updateFreeCam(float dt)
   input.scrollOffsetY = 0.0;
 }
 
+void Engine::loadMaterialAsset(std::string assetName, std::string texturePath, std::string normalPath, std::string heightPath, std::string roughnessPath, std::string metallicPath, std::string aoPath, std::string emissivePath)
+{
+  if (preloadedTextures.find(assetName) != preloadedTextures.end())
+    return;
+
+  std::shared_ptr<TextureManager> textureManager = std::make_shared<TextureManager>(renderer.bufferManager, renderer);
+  textureManager->createTextureImages(texturePath, normalPath, heightPath, roughnessPath, metallicPath, aoPath, emissivePath, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, renderer.commandPool, renderer.graphicsQueue);
+  textureManager->createTextureImageView(renderer.deviceManager.device);
+  textureManager->createTextureSampler(renderer.deviceManager.device, renderer.deviceManager.physicalDevice);
+  preloadedTextures.emplace(textureManager);
+}
+
 void Engine::addEmptyMeshComponent(Entity entity)
 {
   if (registry.meshes.find(entity) != registry.meshes.end())

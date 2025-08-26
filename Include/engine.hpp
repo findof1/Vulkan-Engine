@@ -4,6 +4,7 @@
 #include "ECSRegistry.hpp"
 #include "physicsSystem.hpp"
 #include "noImage.hpp"
+#include <memory>
 
 struct Input
 {
@@ -26,6 +27,7 @@ public:
   ECSRegistry registry;
   std::unordered_map<std::string, std::unique_ptr<UI>> UIElements;
   std::unordered_map<std::string, tinygltf::Model> loadedModels;
+  std::unordered_map<std::string, std::shared_ptr<TextureManager>> preloadedTextures;
 
   std::string selectedUI = "";
   PhysicsSystem physics;
@@ -79,6 +81,7 @@ public:
   void disableCursor();
   void enableCursor();
 
+  void loadMaterialAsset(std::string assetName, std::string texturePath = NO_IMAGE, std::string normalPath = NO_IMAGE, std::string heightPath = NO_IMAGE, std::string roughnessPath = NO_IMAGE, std::string metallicPath = NO_IMAGE, std::string aoPath = NO_IMAGE, std::string emissivePath = NO_IMAGE);
   void createAnimatedModelFromFile(std::string baseName, std::string path, std::string texturesDir);
   void addEmptyMeshComponent(Entity entity);
   void addMeshComponent(Entity entity, MaterialData material, const std::string &texturePath, const std::vector<Vertex> &vertices, const std::vector<uint32_t> &indices);

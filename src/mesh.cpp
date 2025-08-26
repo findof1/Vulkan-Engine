@@ -8,18 +8,27 @@
 #include <glm/gtc/quaternion.hpp>
 #include <noImage.hpp>
 
-Mesh::Mesh(Renderer &renderer, int *nextRenderingId, MaterialData newMaterial, const std::vector<Vertex> &vertices, const std::vector<uint32_t> &indices) : vertices(vertices), indices(indices), material(newMaterial), textureManager(renderer.bufferManager, renderer)
+Mesh::Mesh(Renderer &renderer, std::shared_ptr<TextureManager> texture, int *nextRenderingId, MaterialData newMaterial, const std::vector<Vertex> &vertices, const std::vector<uint32_t> &indices) : vertices(vertices), indices(indices), material(newMaterial), textureManager(texture)
 {
+  ownsTextureManager = false;
   id = *nextRenderingId;
   (*nextRenderingId)++;
 }
 
-void Mesh::initGraphics(Renderer &renderer, std::string texturePath, std::string normalPath, std::string heightPath, std::string roughnessPath, std::string metallicPath, std::string aoPath, std::string emissivePath)
+Mesh::Mesh(Renderer &renderer, int *nextRenderingId, MaterialData newMaterial, const std::vector<Vertex> &vertices, const std::vector<uint32_t> &indices) : vertices(vertices), indices(indices), material(newMaterial), textureManager(std::make_shared<TextureManager>(renderer.bufferManager, renderer))
 {
-  texPath = texturePath;
-  textureManager.createTextureImages(texturePath, normalPath, heightPath, roughnessPath, metallicPath, aoPath, emissivePath, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, renderer.commandPool, renderer.graphicsQueue);
-  textureManager.createTextureImageView(renderer.deviceManager.device);
-  textureManager.createTextureSampler(renderer.deviceManager.device, renderer.deviceManager.physicalDevice);
+  ownsTextureManager = true;
+  id = *nextRenderingId;
+  (*nextRenderingId)++;
+}
+
+void Mesh::initGraphics(Renderer &renderer)
+{
+  if (ownsTextureManager)
+  {
+    std::cerr << "Cannot call initGraphics(Renderer &renderer) when mesh owns the texture manager" << std::endl;
+    return;
+  }
 
   renderer.bufferManager.createVertexBuffer(vertices, id, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, renderer.commandPool, renderer.graphicsQueue);
 
@@ -27,7 +36,30 @@ void Mesh::initGraphics(Renderer &renderer, std::string texturePath, std::string
 
   renderer.bufferManager.createUniformBuffers(renderer.MAX_FRAMES_IN_FLIGHT, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, 1);
 
-  TextureMaps textureMaps(textureManager.albedoImageView, textureManager.albedoSampler, textureManager.normalImageView, textureManager.normalSampler, textureManager.heightImageView, textureManager.heightSampler, textureManager.roughnessImageView, textureManager.roughnessSampler, textureManager.metallicImageView, textureManager.metallicSampler, textureManager.aoImageView, textureManager.aoSampler, textureManager.emissiveImageView, textureManager.emissiveSampler);
+  TextureMaps textureMaps(textureManager->albedoImageView, textureManager->albedoSampler, textureManager->normalImageView, textureManager->normalSampler, textureManager->heightImageView, textureManager->heightSampler, textureManager->roughnessImageView, textureManager->roughnessSampler, textureManager->metallicImageView, textureManager->metallicSampler, textureManager->aoImageView, textureManager->aoSampler, textureManager->emissiveImageView, textureManager->emissiveSampler);
+  renderer.descriptorManager.addDescriptorSets(renderer.deviceManager.device, renderer.MAX_FRAMES_IN_FLIGHT, 1, textureMaps);
+}
+
+void Mesh::initGraphics(Renderer &renderer, std::string texturePath, std::string normalPath, std::string heightPath, std::string roughnessPath, std::string metallicPath, std::string aoPath, std::string emissivePath)
+{
+  if (!ownsTextureManager)
+  {
+    std::cerr << "Cannot call initGraphics(Renderer &renderer, std::string texturePath, std::string normalPath, std::string heightPath, std::string roughnessPath, std::string metallicPath, std::string aoPath, std::string emissivePath) when mesh does not own the texture manager" << std::endl;
+    return;
+  }
+
+  texPath = texturePath;
+  textureManager->createTextureImages(texturePath, normalPath, heightPath, roughnessPath, metallicPath, aoPath, emissivePath, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, renderer.commandPool, renderer.graphicsQueue);
+  textureManager->createTextureImageView(renderer.deviceManager.device);
+  textureManager->createTextureSampler(renderer.deviceManager.device, renderer.deviceManager.physicalDevice);
+
+  renderer.bufferManager.createVertexBuffer(vertices, id, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, renderer.commandPool, renderer.graphicsQueue);
+
+  renderer.bufferManager.createIndexBuffer(indices, id, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, renderer.commandPool, renderer.graphicsQueue);
+
+  renderer.bufferManager.createUniformBuffers(renderer.MAX_FRAMES_IN_FLIGHT, renderer.deviceManager.device, renderer.deviceManager.physicalDevice, 1);
+
+  TextureMaps textureMaps(textureManager->albedoImageView, textureManager->albedoSampler, textureManager->normalImageView, textureManager->normalSampler, textureManager->heightImageView, textureManager->heightSampler, textureManager->roughnessImageView, textureManager->roughnessSampler, textureManager->metallicImageView, textureManager->metallicSampler, textureManager->aoImageView, textureManager->aoSampler, textureManager->emissiveImageView, textureManager->emissiveSampler);
   renderer.descriptorManager.addDescriptorSets(renderer.deviceManager.device, renderer.MAX_FRAMES_IN_FLIGHT, 1, textureMaps);
 }
 
@@ -81,7 +113,7 @@ void Mesh::draw(Renderer *renderer, int currentFrame, glm::mat4 transformation, 
 
 void Mesh::cleanup(VkDevice device, Renderer &renderer)
 {
-  textureManager.cleanup(device);
+  textureManager->cleanup(device);
 
   if (renderer.bufferManager.vertexBuffers.size() > id && renderer.bufferManager.vertexBuffers[id] != VK_NULL_HANDLE)
   {
