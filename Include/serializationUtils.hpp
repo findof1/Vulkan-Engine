@@ -21,6 +21,9 @@ void readFloat(std::ifstream &in, float &f);
 void writeBool(std::ofstream &out, const bool &b);
 void readBool(std::ifstream &in, bool &b);
 
+void writeVec4(std::ofstream &out, const glm::vec4 vec);
+void readVec4(std::ifstream &in, glm::vec4 &vec);
+
 void writeVec3(std::ofstream &out, const glm::vec3 vec);
 void readVec3(std::ifstream &in, glm::vec3 &vec);
 

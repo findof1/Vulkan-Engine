@@ -1,6 +1,6 @@
 #version 450
 
-layout(location = 0) in vec2 fragTexCoord;
+layout(location = 0) in vec4 fragTexCoord;
 layout(location = 1) in vec4 vertexColor;
 layout(location = 2) in vec3 fragNormal;
 layout(location = 3) in vec3 viewPos;
@@ -110,7 +110,7 @@ void main() {
 
     if (material.isSkybox == 1) {
         if (material.hasAlbedoMap == 1){
-            vec3 texColor = texture(albedoMap, fragTexCoord).rgb;
+            vec3 texColor = texture(albedoMap, fragTexCoord.xy).rgb;
             outColor = vec4(texColor, 1.0); 
             return;
         }
@@ -119,19 +119,19 @@ void main() {
     }
 
     if (material.hasAlbedoMap == 1)
-        albedo = texture(albedoMap, fragTexCoord).rgb;
+        albedo = texture(albedoMap, fragTexCoord.xy).rgb;
 
     if (material.hasRoughnessMap == 1)
-        roughness = texture(roughnessMap, fragTexCoord).r;
+        roughness = texture(roughnessMap, fragTexCoord.xy).r;
 
     if (material.hasMetallicMap == 1)
-        metallic = texture(metallicMap, fragTexCoord).r;
+        metallic = texture(metallicMap, fragTexCoord.xy).r;
 
     if (material.hasAOMap == 1)
-        ao = texture(aoMap, fragTexCoord).r;
+        ao = texture(aoMap, fragTexCoord.xy).r;
 
     if (material.hasEmissiveMap == 1)
-        emissive = texture(emissiveMap, fragTexCoord).rgb * material.emissiveStrength;
+        emissive = texture(emissiveMap, fragTexCoord.xy).rgb * material.emissiveStrength;
 
     vec3 norm = normalize(fragNormal);
     if (material.hasNormalMap == 1) {
@@ -141,7 +141,7 @@ void main() {
 
         vec3 bitangent = cross(norm, tangent);
 
-        vec3 tangentNormal = texture(normalMap, fragTexCoord).xyz * 2.0 - 1.0;
+        vec3 tangentNormal = texture(normalMap, fragTexCoord.xy).xyz * 2.0 - 1.0;
 
         mat3 TBN = mat3(normalize(tangent), normalize(bitangent), normalize(fragNormal));
 

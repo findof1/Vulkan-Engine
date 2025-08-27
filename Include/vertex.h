@@ -45,7 +45,7 @@ struct Vertex
 {
   glm::vec3 pos;
   glm::vec3 color;
-  glm::vec2 texPos;
+  glm::vec4 texPos;
   glm::vec3 normal;
 
   static VkVertexInputBindingDescription getBindingDescription()
@@ -73,7 +73,7 @@ struct Vertex
 
     attributeDescriptions[2].binding = 0;
     attributeDescriptions[2].location = 2;
-    attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
+    attributeDescriptions[2].format = VK_FORMAT_R32G32B32A32_SFLOAT;
     attributeDescriptions[2].offset = offsetof(Vertex, texPos);
 
     attributeDescriptions[3].binding = 0;
@@ -89,7 +89,7 @@ struct AnimatedVertex
 {
   glm::vec3 pos;
   glm::vec3 color;
-  glm::vec2 texPos;
+  glm::vec4 texPos;
   glm::vec3 normal;
   glm::uvec4 jointIndices;
   glm::vec4 jointWeights;
@@ -119,7 +119,7 @@ struct AnimatedVertex
 
     attributeDescriptions[2].binding = 0;
     attributeDescriptions[2].location = 2;
-    attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
+    attributeDescriptions[2].format = VK_FORMAT_R32G32B32A32_SFLOAT;
     attributeDescriptions[2].offset = offsetof(AnimatedVertex, texPos);
 
     attributeDescriptions[3].binding = 0;

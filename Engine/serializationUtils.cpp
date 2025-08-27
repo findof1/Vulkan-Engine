@@ -57,6 +57,22 @@ void readBool(std::ifstream &in, bool &b)
   in.read(reinterpret_cast<char *>(&b), sizeof(b));
 }
 
+void writeVec4(std::ofstream &out, const glm::vec4 vec)
+{
+  writeFloat(out, vec.x);
+  writeFloat(out, vec.y);
+  writeFloat(out, vec.z);
+  writeFloat(out, vec.w);
+}
+
+void readVec4(std::ifstream &in, glm::vec4 &vec)
+{
+  readFloat(in, vec.x);
+  readFloat(in, vec.y);
+  readFloat(in, vec.z);
+  readFloat(in, vec.w);
+}
+
 void writeVec3(std::ofstream &out, const glm::vec3 vec)
 {
   writeFloat(out, vec.x);
@@ -184,7 +200,7 @@ void writeMeshes(std::ofstream &out, const std::unordered_map<Entity, MeshCompon
           writeVec3(out, v.pos);
           writeVec3(out, v.color);
           writeVec3(out, v.normal);
-          writeVec2(out, v.texPos);
+          writeVec4(out, v.texPos);
         }
 
         size = static_cast<uint32_t>(mesh.indices.size());
@@ -241,7 +257,7 @@ void readMeshes(std::ifstream &in, Engine *engine)
           readVec3(in, v.pos);
           readVec3(in, v.color);
           readVec3(in, v.normal);
-          readVec2(in, v.texPos);
+          readVec4(in, v.texPos);
           vertices.emplace_back(v);
         }
 

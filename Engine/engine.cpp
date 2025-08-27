@@ -547,7 +547,7 @@ void Engine::createAnimatedModelFromFile(std::string baseName, std::string path,
             v.pos = glm::make_vec3(posData + i * 3);
             v.color = texCoordData ? glm::vec3(-1.0f) : glm::vec3(1.0f);
             v.normal = normalData ? glm::make_vec3(normalData + i * 3) : glm::vec3(0.0f);
-            v.texPos = texCoordData ? glm::make_vec2(texCoordData + i * 2) : glm::vec2(0.0f);
+            v.texPos = texCoordData ? glm::vec4(glm::make_vec2(texCoordData + i * 2), 1, 1) : glm::vec4(0.0f);
 
             if (jointIndexData)
             {
@@ -802,11 +802,11 @@ void Engine::addMeshComponent(Entity entity, const std::string objPath, const st
       {
         vertex.texPos = {
             attrib.texcoords[2 * index.texcoord_index + 0],
-            1.0f - attrib.texcoords[2 * index.texcoord_index + 1]};
+            1.0f - attrib.texcoords[2 * index.texcoord_index + 1], 1, 1};
       }
       else
       {
-        vertex.texPos = {0.0f, 0.0f};
+        vertex.texPos = {0.0f, 0.0f, 1, 1};
       }
 
       vertex.color = {-1.0f, -1.0f, -1.0f};

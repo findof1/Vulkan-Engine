@@ -28,12 +28,12 @@ layout(push_constant) uniform MaterialData {
 
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inColor;
-layout(location = 2) in vec2 inTexCoord;
+layout(location = 2) in vec4 inTexCoord;
 layout(location = 3) in vec3 inNormal;
 layout(location = 4) in vec3 inPositionB;
 layout(location = 5) in vec4 inColorB;
 
-layout(location = 0) out vec2 fragTexCoord;
+layout(location = 0) out vec4 fragTexCoord;
 layout(location = 1) out vec4 vertexColor;
 layout(location = 2) out vec3 fragNormal;
 layout(location = 3) out vec3 viewPos;
@@ -50,7 +50,7 @@ void main() {
         if((inColorB.x > 0 || inColorB.y > 0 || inColorB.z > 0) && vertexColor.x == 0 && vertexColor.y == 0 && vertexColor.z == 0) {
             vertexColor = inColorB;
         }
-        fragTexCoord = vec2(0.0);
+        fragTexCoord = vec4(0.0);
     } else {
         gl_Position = ubo.proj * ubo.view * ubo.model * vec4(inPosition, 1.0);
         vertexColor = vec4(material.albedoColor, 1);

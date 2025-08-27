@@ -69,25 +69,25 @@ void Text::generateVerticesFromText(Renderer &renderer)
 
     Vertex v0;
     v0.pos = glm::vec3(xpos, ypos + h, 0.0f);
-    v0.texPos = glyph.uvOffset;
+    v0.texPos = glm::vec4(glyph.uvOffset.x, glyph.uvOffset.y, 1, 1);
     v0.color = glm::vec3(0.0f);
     v0.normal = glm::vec3(-1.0f);
 
     Vertex v1;
     v1.pos = glm::vec3(xpos, ypos, 0.0f);
-    v1.texPos = glm::vec2(glyph.uvOffset.x, glyph.uvOffset.y + glyph.uvSize.y);
+    v1.texPos = glm::vec4(glyph.uvOffset.x, glyph.uvOffset.y + glyph.uvSize.y, 1, 1);
     v1.color = glm::vec3(0.0f);
     v1.normal = glm::vec3(-1.0f);
 
     Vertex v2;
     v2.pos = glm::vec3(xpos + w, ypos, 0.0f);
-    v2.texPos = glyph.uvOffset + glyph.uvSize;
+    v2.texPos = glm::vec4(glyph.uvOffset.x + glyph.uvSize.x, glyph.uvOffset.y + glyph.uvSize.y, 1, 1);
     v2.color = glm::vec3(0.0f);
     v2.normal = glm::vec3(-1.0f);
 
     Vertex v3;
     v3.pos = glm::vec3(xpos + w, ypos + h, 0.0f);
-    v3.texPos = glm::vec2(glyph.uvOffset.x + glyph.uvSize.x, glyph.uvOffset.y);
+    v3.texPos = glm::vec4(glyph.uvOffset.x + glyph.uvSize.x, glyph.uvOffset.y, 1, 1);
     v3.color = glm::vec3(0.0f);
     v3.normal = glm::vec3(-1.0f);
 
