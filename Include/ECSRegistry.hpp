@@ -3,9 +3,23 @@
 #include <cstdint>
 #include "components.hpp"
 
+#ifdef BUILD_ENGINE_DLL
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllexport)
+#endif
+
+#else
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllimport)
+#endif
+
+#endif
+
 using Entity = uint32_t;
 
-class ECSRegistry
+class ENGINE_API ECSRegistry
 {
 private:
   Entity nextEntity = 1;

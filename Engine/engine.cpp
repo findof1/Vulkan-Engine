@@ -48,15 +48,24 @@ void Engine::enableCursor()
 
 void Engine::init(std::string windowName, std::function<void(Engine *)> startFn, std::function<void(Engine *, float)> updateFn)
 {
+  std::cout << "SE1" << std::endl;
   start = std::move(startFn);
+  std::cout << "SE2" << std::endl;
   update = std::move(updateFn);
+  std::cout << "SE3" << std::endl;
 
   initWindow(windowName);
+  std::cout << "SE4" << std::endl;
   renderer.initVulkan();
+  std::cout << "SE5" << std::endl;
   particleEmitters.emplace_back(renderer, &nextRenderingId, 512, glm::vec3(-1000));
+  std::cout << "SE6" << std::endl;
   particleEmitters.at(0).hide = true;
+  std::cout << "SE7" << std::endl;
   renderer.engineUI.initImGui(&renderer);
+  std::cout << "SE8" << std::endl;
   physics.debugDrawer = new VulkanDebugDrawer(renderer, nextRenderingId, true);
+  std::cout << "SE9" << std::endl;
 }
 
 void Engine::run()

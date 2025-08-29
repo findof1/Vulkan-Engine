@@ -6,7 +6,21 @@
 #include "noImage.hpp"
 #include <memory>
 
-struct MaterialData
+#ifdef BUILD_ENGINE_DLL
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllexport)
+#endif
+
+#else
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllimport)
+#endif
+
+#endif
+
+struct ENGINE_API MaterialData
 {
   alignas(16) glm::vec3 albedoColor = glm::vec3(1.0f);
   float metallic = 0.0f;
@@ -30,7 +44,7 @@ struct MaterialData
 
 class TextureManager;
 class Renderer;
-class Mesh
+class ENGINE_API Mesh
 {
 public:
   std::vector<Vertex> vertices;

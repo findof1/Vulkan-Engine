@@ -4,7 +4,22 @@
 #include <map>
 #include "vertex.h"
 #include "utils.h"
-class BufferManager
+
+#ifdef BUILD_ENGINE_DLL
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllexport)
+#endif
+
+#else
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllimport)
+#endif
+
+#endif
+
+class ENGINE_API BufferManager
 {
 public:
   BufferManager()

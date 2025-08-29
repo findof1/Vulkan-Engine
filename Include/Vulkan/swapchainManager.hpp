@@ -5,8 +5,21 @@
 #include <stdexcept>
 #include <GLFW/glfw3.h>
 
+#ifdef BUILD_ENGINE_DLL
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllexport)
+#endif
+
+#else
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllimport)
+#endif
+
+#endif
 struct SwapChainSupportDetails;
-class SwapchainManager
+class ENGINE_API SwapchainManager
 {
 public:
   GLFWwindow *window;

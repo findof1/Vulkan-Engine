@@ -4,13 +4,27 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#ifdef BUILD_ENGINE_DLL
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllexport)
+#endif
+
+#else
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllimport)
+#endif
+
+#endif
+
 const float YAW = -90.0f;
 const float PITCH = 0.0f;
 const float SPEED = 20.0f;
 const float SENSITIVITY = 0.1f;
 const float ZOOM = 70.0f;
 
-class Camera
+class ENGINE_API Camera
 {
 public:
   glm::vec3 Position;

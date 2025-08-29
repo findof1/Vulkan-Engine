@@ -5,7 +5,21 @@
 #include "text.hpp"
 #include <functional>
 
-class Square : public UI
+#ifdef BUILD_ENGINE_DLL
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllexport)
+#endif
+
+#else
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllimport)
+#endif
+
+#endif
+
+class ENGINE_API Square : public UI
 {
 public:
   int hasTexture = 0;

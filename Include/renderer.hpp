@@ -22,6 +22,20 @@
 #include "engineUI.hpp"
 #include FT_FREETYPE_H
 
+#ifdef BUILD_ENGINE_DLL
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllexport)
+#endif
+
+#else
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllimport)
+#endif
+
+#endif
+
 class Camera;
 class SwapchainManager;
 class BufferManager;
@@ -42,24 +56,21 @@ enum RenderStage
   ColorID, // for clicking and color picking
 };
 
-struct RenderCommand
+struct ENGINE_API RenderCommand
 {
   std::function<void(VkCommandBuffer, RenderStage)> execute;
 };
 
 #endif
 
-class Renderer
+class ENGINE_API Renderer
 {
 public:
   const int MAX_FRAMES_IN_FLIGHT = 2;
 
-  const std::vector<const char *> validationLayers = {
-      "VK_LAYER_KHRONOS_validation"};
+  static const std::vector<const char *> validationLayers;
 
-  const std::vector<const char *> deviceExtensions = {
-      VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-      VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME};
+  static const std::vector<const char *> deviceExtensions;
 
   const bool enableValidationLayers = false;
 

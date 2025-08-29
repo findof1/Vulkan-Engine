@@ -4,10 +4,24 @@
 #include <glm/glm.hpp>
 #include <vector>
 #include <string>
+
+#ifdef BUILD_ENGINE_DLL
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllexport)
+#endif
+
+#else
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllimport)
+#endif
+
+#endif
 class SwapchainManager;
 class DescriptorManager;
 
-class PipelineManager
+class ENGINE_API PipelineManager
 {
 public:
   VkRenderPass renderPass;

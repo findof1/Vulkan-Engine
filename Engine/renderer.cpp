@@ -8,6 +8,13 @@
 #include <imgui.h>
 #include <imgui_impl_vulkan.h>
 
+const std::vector<const char *> Renderer::validationLayers = {
+    "VK_LAYER_KHRONOS_validation"};
+
+const std::vector<const char *> Renderer::deviceExtensions = {
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+    VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME};
+
 Renderer::Renderer(Camera &camera, uint32_t &WIDTH, uint32_t &HEIGHT)
     : bufferManager(), swapchainManager(), deviceManager(swapchainManager), descriptorManager(bufferManager), pipelineManager(swapchainManager, descriptorManager), camera(camera), WIDTH(WIDTH), HEIGHT(HEIGHT)
 {
@@ -23,37 +30,60 @@ Renderer::Renderer(Camera &camera, uint32_t &WIDTH, uint32_t &HEIGHT)
 
 void Renderer::initVulkan()
 {
+  std::cout << "DE1" << std::endl;
   createInstance();
+  std::cout << "DE2" << std::endl;
   swapchainManager.createSurface(instance);
+  std::cout << "DE3" << std::endl;
   deviceManager.pickPhysicalDevice(instance, deviceExtensions);
+  std::cout << "DE4" << std::endl;
   deviceManager.createLogicalDevice(enableValidationLayers, deviceExtensions, validationLayers, &presentQueue, &graphicsQueue, &computeQueue);
+  std::cout << "DE5" << std::endl;
 
   swapchainManager.createSwapChain(deviceManager.device, deviceManager.physicalDevice);
+  std::cout << "DE6" << std::endl;
   swapchainManager.createImageViews(deviceManager.device);
+  std::cout << "DE7" << std::endl;
   pipelineManager.createRenderPass(deviceManager.device, deviceManager.physicalDevice);
+  std::cout << "DE8" << std::endl;
   pipelineManager.createOffScreenRenderPass(deviceManager.device, deviceManager.physicalDevice);
+  std::cout << "DE9" << std::endl;
   pipelineManager.createColorIDRenderPass(deviceManager.device, deviceManager.physicalDevice);
+  std::cout << "DE10" << std::endl;
   descriptorManager.createDescriptorSetLayout(deviceManager.device);
+  std::cout << "DE11" << std::endl;
   pipelineManager.createGraphicsPipeline(deviceManager.device);
+  std::cout << "DE12" << std::endl;
   pipelineManager.createColorIDPipeline(deviceManager.device);
+  std::cout << "DE13" << std::endl;
   pipelineManager.createComputePipeline(deviceManager.device);
+  std::cout << "DE14" << std::endl;
   createCommandPool();
+  std::cout << "DE15" << std::endl;
   swapchainManager.createDepthResources(deviceManager.device, deviceManager.physicalDevice, commandPool, graphicsQueue);
+  std::cout << "DE16" << std::endl;
   swapchainManager.createFramebuffers(deviceManager.device, pipelineManager.renderPass);
+  std::cout << "DE17" << std::endl;
 
   // bufferManager.createVertexBuffer(vertices, 0, deviceManager.device, deviceManager.physicalDevice, commandPool, graphicsQueue);
   // bufferManager.createIndexBuffer(indices, 0, deviceManager.device, deviceManager.physicalDevice, commandPool, //graphicsQueue);
   // bufferManager.createUniformBuffers(MAX_FRAMES_IN_FLIGHT, deviceManager.device, deviceManager.physicalDevice, 2);
   bufferManager.createLightsUniformBuffers(MAX_FRAMES_IN_FLIGHT, deviceManager.device, deviceManager.physicalDevice);
+  std::cout << "DE18" << std::endl;
   descriptorManager.createDescriptorPool(deviceManager.device, MAX_FRAMES_IN_FLIGHT, 250);
+  std::cout << "DE19" << std::endl;
 
   // descriptorManager.createDescriptorSets(deviceManager.device, MAX_FRAMES_IN_FLIGHT, 1);
   // descriptorManager.addDescriptorSets(deviceManager.device, MAX_FRAMES_IN_FLIGHT, 1);
   createCommandBuffer();
+  std::cout << "DE20" << std::endl;
   createSyncObjects();
+  std::cout << "DE21" << std::endl;
 
   fpCmdSetPrimitiveTopology = (PFN_vkCmdSetPrimitiveTopology)vkGetDeviceProcAddr(deviceManager.device, "vkCmdSetPrimitiveTopology");
+  std::cout << "DE22" << std::endl;
   vkCmdSetDepthWriteEnableEXT = (PFN_vkCmdSetDepthWriteEnableEXT)vkGetDeviceProcAddr(deviceManager.device, "vkCmdSetDepthWriteEnableEXT");
+  std::cout << "DE23" << std::endl;
 }
 
 void Renderer::recreateSwapChain()
@@ -532,10 +562,12 @@ void Renderer::cleanup()
 
 void Renderer::createInstance()
 {
+  std::cout << "RE" << std::endl;
   if (enableValidationLayers && !checkValidationLayerSupport())
   {
     throw std::runtime_error("validation layers requested, but not available!");
   }
+  std::cout << "RE1" << std::endl;
 
   VkApplicationInfo appInfo{};
   appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -544,53 +576,72 @@ void Renderer::createInstance()
   appInfo.pEngineName = "No Engine";
   appInfo.engineVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
   appInfo.apiVersion = VK_API_VERSION_1_3;
+  std::cout << "RE2" << std::endl;
 
   VkInstanceCreateInfo createInfo{};
   createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
   createInfo.pApplicationInfo = &appInfo;
+  std::cout << "RE3" << std::endl;
 
   uint32_t glfwExtensionCount = 0;
   const char **glfwExtensions;
+  std::cout << "RE4" << std::endl;
 
   glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+  std::cout << "RE5" << std::endl;
 
   createInfo.enabledExtensionCount = glfwExtensionCount;
   createInfo.ppEnabledExtensionNames = glfwExtensions;
+  std::cout << "RE6" << std::endl;
 
   if (enableValidationLayers)
   {
     createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
     createInfo.ppEnabledLayerNames = validationLayers.data();
+    std::cout << "RE7" << std::endl;
   }
   else
   {
     createInfo.enabledLayerCount = 0;
   }
 
+  std::cout << "RE8" << std::endl;
   VkResult result = vkCreateInstance(&createInfo, nullptr, &instance);
   if (result != VK_SUCCESS)
   {
     std::cerr << "failed to create instance!" << result << std::endl;
     exit(EXIT_FAILURE);
   }
+  std::cout << "RE9" << std::endl;
 }
 
 bool Renderer::checkValidationLayerSupport()
 {
+  std::cout << "GE" << std::endl;
   uint32_t layerCount;
-  vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+  VkResult result = vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+  if (result != VK_SUCCESS)
+  {
+    throw std::runtime_error("failed to enumerate instance layers (count)!");
+  }
+  std::cout << "GE1" << std::endl;
 
   std::vector<VkLayerProperties> availableLayers(layerCount);
   vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
-
+  std::cout << "GE2" << std::endl;
+  std::cout << "Layer count: " << layerCount << std::endl;
+  std::cout << "validationLayers count: " << validationLayers.size() << std::endl;
   for (const char *layerName : validationLayers)
   {
+    std::cout << "GE3" << std::endl;
     bool layerFound = false;
 
     for (const auto &layerProperties : availableLayers)
     {
+      std::cout << "GE4" << std::endl;
       if (strcmp(layerName, layerProperties.layerName) == 0)
       {
+        std::cout << "GE5" << std::endl;
         layerFound = true;
         break;
       }
@@ -598,6 +649,7 @@ bool Renderer::checkValidationLayerSupport()
 
     if (!layerFound)
     {
+      std::cout << "GE6" << std::endl;
       return false;
     }
   }

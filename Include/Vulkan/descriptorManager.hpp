@@ -3,7 +3,21 @@
 #include <vector>
 #include <map>
 
-struct TextureMaps
+#ifdef BUILD_ENGINE_DLL
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllexport)
+#endif
+
+#else
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllimport)
+#endif
+
+#endif
+
+struct ENGINE_API TextureMaps
 {
   TextureMaps(VkImageView &albedoImageView,
               VkSampler &albedoSampler,
@@ -53,7 +67,7 @@ struct TextureMaps
 
 class BufferManager;
 class TextureManager;
-class DescriptorManager
+class ENGINE_API DescriptorManager
 {
 public:
   VkDescriptorSetLayout descriptorSetLayout;

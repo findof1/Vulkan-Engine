@@ -3,10 +3,24 @@
 #include <glm/glm.hpp>
 #include "components.hpp"
 
+#ifdef BUILD_ENGINE_DLL
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllexport)
+#endif
+
+#else
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllimport)
+#endif
+
+#endif
+
 using Entity = uint32_t;
 class ECSRegistry;
 class VulkanDebugDrawer;
-class PhysicsSystem
+class ENGINE_API PhysicsSystem
 {
 public:
   glm::vec3 gravity = glm::vec3(0.0f, -9.81f, 0.0f);

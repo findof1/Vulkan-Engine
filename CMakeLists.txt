@@ -51,7 +51,7 @@ target_link_libraries(VulkanEngine
     ws2_32
 )
 
-target_compile_definitions(VulkanEngine PRIVATE ENGINE_BUILD_DLL)
+target_compile_definitions(VulkanEngine PRIVATE BUILD_ENGINE_DLL)
 
 file(GLOB SOURCES "${CMAKE_SOURCE_DIR}/Test/*.cpp")
 

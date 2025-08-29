@@ -7,7 +7,21 @@
 #include <iostream>
 #include <vector>
 
-struct Particle
+#ifdef BUILD_ENGINE_DLL
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllexport)
+#endif
+
+#else
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllimport)
+#endif
+
+#endif
+
+struct ENGINE_API Particle
 {
   alignas(16) glm::vec3 position;
   alignas(16) glm::vec4 color;
@@ -41,7 +55,7 @@ struct Particle
   }
 };
 
-struct Vertex
+struct ENGINE_API Vertex
 {
   glm::vec3 pos;
   glm::vec3 color;
@@ -85,7 +99,7 @@ struct Vertex
   }
 };
 
-struct AnimatedVertex
+struct ENGINE_API AnimatedVertex
 {
   glm::vec3 pos;
   glm::vec3 color;

@@ -7,7 +7,21 @@
 #include "textureManager.hpp"
 #include "renderer.hpp"
 
-class UI
+#ifdef BUILD_ENGINE_DLL
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllexport)
+#endif
+
+#else
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllimport)
+#endif
+
+#endif
+
+class ENGINE_API UI
 {
 public:
   glm::vec3 position;

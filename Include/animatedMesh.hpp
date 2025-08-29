@@ -5,9 +5,23 @@
 #include "textureManager.hpp"
 #include "mesh.hpp"
 
+#ifdef BUILD_ENGINE_DLL
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllexport)
+#endif
+
+#else
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllimport)
+#endif
+
+#endif
+
 class TextureManager;
 class Renderer;
-class AnimatedMesh
+class ENGINE_API AnimatedMesh
 {
 public:
   std::vector<AnimatedVertex> vertices;

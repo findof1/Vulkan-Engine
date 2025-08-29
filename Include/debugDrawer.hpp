@@ -6,8 +6,22 @@
 #include "vertex.h"
 #include "textureManager.hpp"
 
+#ifdef BUILD_ENGINE_DLL
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllexport)
+#endif
+
+#else
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllimport)
+#endif
+
+#endif
+
 class Renderer;
-class VulkanDebugDrawer
+class ENGINE_API VulkanDebugDrawer
 {
 public:
   std::vector<Vertex> debugLines;

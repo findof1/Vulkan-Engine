@@ -10,7 +10,21 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-struct Glyph
+#ifdef BUILD_ENGINE_DLL
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllexport)
+#endif
+
+#else
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllimport)
+#endif
+
+#endif
+
+struct ENGINE_API Glyph
 {
   float advance;
   glm::ivec2 size;
@@ -22,7 +36,7 @@ struct Glyph
   FT_Bitmap bitmap;
 };
 
-class Text : public UI
+class ENGINE_API Text : public UI
 {
 public:
   std::string content;

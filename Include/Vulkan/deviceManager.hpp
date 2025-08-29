@@ -1,8 +1,22 @@
 #pragma once
 #include <vulkan/vulkan.h>
 #include <vector>
+
+#ifdef BUILD_ENGINE_DLL
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllexport)
+#endif
+
+#else
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllimport)
+#endif
+
+#endif
 class SwapchainManager;
-class DeviceManager
+class ENGINE_API DeviceManager
 {
 public:
   VkDevice device;

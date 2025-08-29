@@ -1,12 +1,26 @@
 #pragma once
 
+#ifdef BUILD_ENGINE_DLL
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllexport)
+#endif
+
+#else
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllimport)
+#endif
+
+#endif
+
 #include <vulkan/vulkan_core.h>
 #include <imgui.h>
 #include <imgui_impl_vulkan.h>
 #include <imgui_impl_glfw.h>
 class Renderer;
 class Engine;
-class EngineUI
+class ENGINE_API EngineUI
 {
 public:
   VkDescriptorPool descriptorPool;

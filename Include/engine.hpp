@@ -6,7 +6,21 @@
 #include "noImage.hpp"
 #include <memory>
 
-struct Input
+#ifdef BUILD_ENGINE_DLL
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllexport)
+#endif
+
+#else
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllimport)
+#endif
+
+#endif
+
+struct ENGINE_API Input
 {
   bool keys[GLFW_KEY_LAST] = {false};
   bool mouseButtons[GLFW_MOUSE_BUTTON_LAST] = {false};
@@ -16,7 +30,7 @@ struct Input
   double scrollOffsetY = 0.0;
 };
 
-class Engine
+class ENGINE_API Engine
 {
 public:
   Camera camera;

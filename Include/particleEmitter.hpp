@@ -6,9 +6,23 @@
 #include <glm/gtc/quaternion.hpp>
 #include "noImage.hpp"
 
+#ifdef BUILD_ENGINE_DLL
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllexport)
+#endif
+
+#else
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllimport)
+#endif
+
+#endif
+
 class TextureManager;
 class Renderer;
-class ParticleEmitter
+class ENGINE_API ParticleEmitter
 {
 public:
   std::vector<Particle> particles;

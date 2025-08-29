@@ -2,11 +2,26 @@
 #include <vulkan/vulkan.h>
 #include <memory>
 #include <vector>
+
+#ifdef BUILD_ENGINE_DLL
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllexport)
+#endif
+
+#else
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllimport)
+#endif
+
+#endif
+
 class BufferManager;
 class Renderer;
 struct FT_Bitmap_;
 typedef FT_Bitmap_ FT_Bitmap;
-class TextureManager
+class ENGINE_API TextureManager
 {
 public:
   VkImage albedoImage;

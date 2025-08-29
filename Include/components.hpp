@@ -5,7 +5,21 @@
 #include "animatedMesh.hpp"
 #include "tiny_gltf.h"
 
-struct TransformComponent
+#ifdef BUILD_ENGINE_DLL
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllexport)
+#endif
+
+#else
+
+#ifndef ENGINE_API
+#define ENGINE_API __declspec(dllimport)
+#endif
+
+#endif
+
+struct ENGINE_API TransformComponent
 {
   glm::vec3 position;
   glm::vec3 rotationZYX;
@@ -13,13 +27,13 @@ struct TransformComponent
   bool justUpdated = true;
 };
 
-struct PointLightComponent
+struct ENGINE_API PointLightComponent
 {
   glm::vec3 color;
   int intensity;
 };
 
-struct MeshComponent
+struct ENGINE_API MeshComponent
 {
   bool hide = false;
   std::vector<Mesh> meshes;
@@ -29,18 +43,18 @@ struct MeshComponent
   std::string mtlPath;
 };
 
-struct ParentComponent
+struct ENGINE_API ParentComponent
 {
   int parent;
 };
 
-struct AnimatedMeshComponent
+struct ENGINE_API AnimatedMeshComponent
 {
   bool hide = false;
   std::vector<AnimatedMesh> meshes;
 };
 
-struct SkeletonComponent
+struct ENGINE_API SkeletonComponent
 {
   tinygltf::Model *model;
   const tinygltf::Node *node;
@@ -59,21 +73,21 @@ struct SkeletonComponent
   std::vector<NodeLocalTransform> nodeTransforms;
 };
 
-struct AnimationSampler
+struct ENGINE_API AnimationSampler
 {
   std::vector<float> inputTimes;
   std::vector<glm::vec4> outputValues;
   std::string interpolation;
 };
 
-struct AnimationChannel
+struct ENGINE_API AnimationChannel
 {
   int nodeIndex;
   std::string path;
   int samplerIndex;
 };
 
-struct Animation
+struct ENGINE_API Animation
 {
   std::string name;
   std::vector<AnimationSampler> samplers;
@@ -81,7 +95,7 @@ struct Animation
   float duration = 0.0f;
 };
 
-struct AnimationComponent
+struct ENGINE_API AnimationComponent
 {
   std::vector<Animation> animations;
   int currentAnimationIndex = -1;
@@ -89,7 +103,7 @@ struct AnimationComponent
   bool playing = false;
 };
 
-struct BoxColliderComponent
+struct ENGINE_API BoxColliderComponent
 {
   bool justUpdated = true;
 
@@ -183,7 +197,7 @@ struct BoxColliderComponent
   }
 };
 
-struct RigidBodyComponent
+struct ENGINE_API RigidBodyComponent
 {
   glm::vec3 velocity = glm::vec3(0.0f);
 
