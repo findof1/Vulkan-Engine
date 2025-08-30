@@ -215,7 +215,7 @@ void TextureManager::createTextureSampler(VkDevice device, VkPhysicalDevice phys
   samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
   samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
   samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-  samplerInfo.anisotropyEnable = VK_TRUE;
+  samplerInfo.anisotropyEnable = VK_FALSE;
 
   VkPhysicalDeviceProperties properties{};
   vkGetPhysicalDeviceProperties(physicalDevice, &properties);
