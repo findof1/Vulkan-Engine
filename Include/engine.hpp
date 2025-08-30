@@ -95,12 +95,14 @@ public:
   void disableCursor();
   void enableCursor();
 
+  void removeEntity(Entity entity);
   void loadMaterialAsset(std::string assetName, std::string texturePath = NO_IMAGE, std::string normalPath = NO_IMAGE, std::string heightPath = NO_IMAGE, std::string roughnessPath = NO_IMAGE, std::string metallicPath = NO_IMAGE, std::string aoPath = NO_IMAGE, std::string emissivePath = NO_IMAGE);
   void createAnimatedModelFromFile(std::string baseName, std::string path, std::string texturesDir);
   void addEmptyMeshComponent(Entity entity);
   void addMeshComponent(Entity entity, MaterialData material, const std::string &texturePath, const std::vector<Vertex> &vertices, const std::vector<uint32_t> &indices);
   void addMeshComponent(Entity entity, const std::string objPath, const std::string mtlPath);
   void addMeshToComponent(Entity entity, MaterialData material, const std::string &texturePath, const std::vector<Vertex> &vertices, const std::vector<uint32_t> &indices);
+  void addMeshToComponent(Entity entity, std::string textureAssetName, MaterialData material, const std::vector<Vertex> &vertices, const std::vector<uint32_t> &indices);
   void removeMeshComponent(Entity entity);
   void addEmptyAnimatedMeshComponent(Entity entity);
   void addAnimatedMeshToComponent(Entity entity, MaterialData material, const std::string &texturePath, const std::vector<AnimatedVertex> &vertices, const std::vector<uint32_t> &indices);

@@ -59,7 +59,7 @@ public:
 
   Mesh(Renderer &renderer, int *nextRenderingId, MaterialData material, const std::vector<Vertex> &vertices, const std::vector<uint32_t> &indices);
   Mesh(Renderer &renderer, std::shared_ptr<TextureManager> texture, int *nextRenderingId, MaterialData newMaterial, const std::vector<Vertex> &vertices, const std::vector<uint32_t> &indices);
-  void initGraphics(Renderer &renderer, std::string texturePath = NO_IMAGE, std::string normalPath = NO_IMAGE, std::string heightPath = NO_IMAGE, std::string roughnessPath = NO_IMAGE, std::string metallicPath = NO_IMAGE, std::string aoPath = NO_IMAGE, std::string emissivePath = NO_IMAGE);
+  void initGraphics(Renderer &renderer, std::string texturePath, std::string normalPath = NO_IMAGE, std::string heightPath = NO_IMAGE, std::string roughnessPath = NO_IMAGE, std::string metallicPath = NO_IMAGE, std::string aoPath = NO_IMAGE, std::string emissivePath = NO_IMAGE);
   void initGraphics(Renderer &renderer);
   void draw(Renderer *renderer, int currentFrame, glm::mat4 transformation, glm::mat4 view, glm::mat4 projectionMatrix, VkCommandBuffer commandBuffer, int colorStageID);
   void cleanup(VkDevice device, Renderer &renderer);

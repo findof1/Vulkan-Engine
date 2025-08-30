@@ -113,7 +113,10 @@ void Mesh::draw(Renderer *renderer, int currentFrame, glm::mat4 transformation, 
 
 void Mesh::cleanup(VkDevice device, Renderer &renderer)
 {
-  textureManager->cleanup(device);
+  if (ownsTextureManager)
+  {
+    textureManager->cleanup(device);
+  }
 
   if (renderer.bufferManager.vertexBuffers.size() > id && renderer.bufferManager.vertexBuffers[id] != VK_NULL_HANDLE)
   {

@@ -300,6 +300,70 @@ void Engine::loadMaterialAsset(std::string assetName, std::string texturePath, s
   preloadedTextures.emplace(assetName, textureManager);
 }
 
+void Engine::removeEntity(Entity entity)
+{
+  removeMeshComponent(entity);
+
+  if (registry.animatedMeshes.find(entity) != registry.animatedMeshes.end())
+  {
+    AnimatedMeshComponent &meshComp = registry.animatedMeshes[entity];
+
+    for (auto &mesh : meshComp.meshes)
+    {
+      mesh.cleanup(renderer.deviceManager.device, renderer);
+    }
+
+    registry.animatedMeshes.erase(entity);
+  }
+
+  if (registry.animationComponents.find(entity) != registry.animationComponents.end())
+  {
+    registry.animationComponents.erase(entity);
+  }
+
+  if (registry.animationSkeletons.find(entity) != registry.animationSkeletons.end())
+  {
+    registry.animationSkeletons.erase(entity);
+  }
+
+  if (registry.boxColliders.find(entity) != registry.boxColliders.end())
+  {
+    registry.boxColliders.erase(entity);
+  }
+
+  if (registry.rigidBodies.find(entity) != registry.rigidBodies.end())
+  {
+    registry.rigidBodies.erase(entity);
+  }
+
+  if (registry.transforms.find(entity) != registry.transforms.end())
+  {
+    registry.transforms.erase(entity);
+  }
+
+  if (registry.parents.find(entity) != registry.parents.end())
+  {
+    registry.parents.erase(entity);
+  }
+
+  if (registry.pointLights.find(entity) != registry.pointLights.end())
+  {
+    registry.pointLights.erase(entity);
+  }
+
+  for (auto it = registry.entities.begin(); it != registry.entities.end();)
+  {
+    if (it->second == entity)
+    {
+      it = registry.entities.erase(it);
+    }
+    else
+    {
+      ++it;
+    }
+  }
+}
+
 void Engine::addEmptyMeshComponent(Entity entity)
 {
   if (registry.meshes.find(entity) != registry.meshes.end())
@@ -344,6 +408,20 @@ void Engine::addMeshToComponent(Entity entity, MaterialData material, const std:
 
   Mesh mesh(renderer, &nextRenderingId, material, vertices, indices);
   mesh.initGraphics(renderer, texturePath.empty() ? NO_IMAGE : texturePath);
+  meshComp.meshes.emplace_back(std::move(mesh));
+}
+
+void Engine::addMeshToComponent(Entity entity, std::string textureAssetName, MaterialData material, const std::vector<Vertex> &vertices, const std::vector<uint32_t> &indices)
+{
+  if (registry.meshes.find(entity) == registry.meshes.end() || preloadedTextures.find(textureAssetName) == preloadedTextures.end())
+    return;
+
+  MeshComponent &meshComp = registry.meshes.at(entity);
+  if (meshComp.loadedFromFile)
+    return;
+
+  Mesh mesh(renderer, preloadedTextures.at(textureAssetName), &nextRenderingId, material, vertices, indices);
+  mesh.initGraphics(renderer);
   meshComp.meshes.emplace_back(std::move(mesh));
 }
 
@@ -915,13 +993,16 @@ void Engine::addMeshComponent(Entity entity, const std::string objPath, const st
 
 void Engine::removeMeshComponent(Entity entity)
 {
-  MeshComponent &meshComp = registry.meshes[entity];
-  for (auto &mesh : meshComp.meshes)
+  if (registry.meshes.find(entity) != registry.meshes.end())
   {
-    mesh.cleanup(renderer.deviceManager.device, renderer);
-  }
+    MeshComponent &meshComp = registry.meshes[entity];
+    for (auto &mesh : meshComp.meshes)
+    {
+      mesh.cleanup(renderer.deviceManager.device, renderer);
+    }
 
-  registry.meshes.erase(entity);
+    registry.meshes.erase(entity);
+  }
 }
 
 void Engine::addRigidBodyComponent(Entity entity)
