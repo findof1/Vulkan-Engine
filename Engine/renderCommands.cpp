@@ -353,11 +353,16 @@ RenderCommand makeUICommand(UI *ui, Renderer *renderer, int currentFrame, glm::m
         setTriangleTopology(renderer, cmdBuf);
         enableDepthWrite(renderer, cmdBuf);
 
+        glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 0.0f);
+        glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, -1.0f);
+        glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+        glm::mat4 staticView = glm::lookAt(cameraPos, cameraTarget, cameraUp);
+
         VkExtent2D offscreenExtent;
         offscreenExtent.width = renderer->engineUI.imageW;
         offscreenExtent.height = renderer->engineUI.imageH;
         setupViewportScissor(cmdBuf, offscreenExtent);
-        ui->draw(renderer, currentFrame, model, glm::mat4(1.0f), ortho, cmdBuf);
+        ui->draw(renderer, currentFrame, model, staticView, ortho, cmdBuf);
       }};
 }
 
