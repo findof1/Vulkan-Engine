@@ -7,3 +7,6 @@ bin
 socketValues.hpp
 build
 debug
+# Block out my build scripts - Derped
+build.bat
+build.ps1
