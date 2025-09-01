@@ -68,8 +68,11 @@ void EngineUI::initImGui(Renderer *renderer)
   }
   vkQueueWaitIdle(renderer->graphicsQueue);
 
-  initOffscreenResources(renderer);
-  initColorIDResources(renderer);
+  if (renderToViewport)
+  {
+    initOffscreenResources(renderer);
+    initColorIDResources(renderer);
+  }
 }
 
 void EngineUI::initOffscreenResources(Renderer *renderer)
@@ -401,31 +404,34 @@ void EngineUI::renderImGUI(Engine *engine, Renderer *renderer)
   }
   ImGui::End();
 
-  ImGui::SetNextWindowSize(ImVec2(1200, 900));
-  ImGui::Begin("Viewport");
-  ImGui::Image(offscreenImageId, ImVec2(imageW, imageH));
-
-  ImVec2 imageMin = ImGui::GetItemRectMin();
-  ImVec2 imageMax = ImGui::GetItemRectMax();
-  sceneMin = imageMin;
-  sceneMax = imageMax;
-
-  ImVec2 mousePos = ImGui::GetMousePos();
-
-  bool insideImage = (mousePos.x >= imageMin.x && mousePos.x < imageMax.x &&
-                      mousePos.y >= imageMin.y && mousePos.y < imageMax.y);
-
-  int px = static_cast<int>(mousePos.x - imageMin.x);
-  int py = static_cast<int>(mousePos.y - imageMin.y);
-
-  if (insideImage && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+  if (renderToViewport)
   {
-    uint32_t pickedColorID = readColorIDPixel(renderer, px, py);
-    if (pickedColorID < engine->registry.getNextEntity())
-      *selected = pickedColorID;
-  }
+    ImGui::SetNextWindowSize(ImVec2(1200, 900));
+    ImGui::Begin("Viewport");
+    ImGui::Image(offscreenImageId, ImVec2(imageW, imageH));
 
-  ImGui::End();
+    ImVec2 imageMin = ImGui::GetItemRectMin();
+    ImVec2 imageMax = ImGui::GetItemRectMax();
+    sceneMin = imageMin;
+    sceneMax = imageMax;
+
+    ImVec2 mousePos = ImGui::GetMousePos();
+
+    bool insideImage = (mousePos.x >= imageMin.x && mousePos.x < imageMax.x &&
+                        mousePos.y >= imageMin.y && mousePos.y < imageMax.y);
+
+    int px = static_cast<int>(mousePos.x - imageMin.x);
+    int py = static_cast<int>(mousePos.y - imageMin.y);
+
+    if (insideImage && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+    {
+      uint32_t pickedColorID = readColorIDPixel(renderer, px, py);
+      if (pickedColorID < engine->registry.getNextEntity())
+        *selected = pickedColorID;
+    }
+
+    ImGui::End();
+  }
 
   ImGui::Render();
 }

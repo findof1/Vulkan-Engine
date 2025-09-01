@@ -20,6 +20,16 @@
 
 #endif
 
+#ifndef DEBUG_MODE
+#define DEBUG_MODE
+enum DebugMode
+{
+  Viewport, // full debug tools along with viewport
+  Tools,    // full debug tools
+  Inactive, // no debug tools
+};
+#endif
+
 struct ENGINE_API Input
 {
   bool keys[GLFW_KEY_LAST] = {false};
@@ -46,7 +56,9 @@ public:
   std::string selectedUI = "";
   PhysicsSystem physics;
 
-  Engine(uint32_t width = 1600, uint32_t height = 1200) : WIDTH(width), HEIGHT(height), camera(), renderer(camera, WIDTH, HEIGHT), registry(), physics(registry)
+  DebugMode debugMode;
+
+  Engine(uint32_t width = 1600, uint32_t height = 1200, DebugMode debugMode = DebugMode::Tools) : WIDTH(width), HEIGHT(height), debugMode(debugMode), camera(), renderer(camera, WIDTH, HEIGHT), registry(), physics(registry)
   {
   }
 
@@ -59,7 +71,7 @@ public:
   void clearHierarchy();
 
   void addTextElement(const std::string &name, glm::vec3 position, std::string text);
-  void addSquareElement(const std::string &name, glm::vec3 position, glm::vec3 color, std::array<glm::vec2, 2> verticesOffsets, std::string texture = NO_IMAGE);
+  void addSquareElement(const std::string &name, glm::vec3 position, glm::vec3 color, std::array<glm::vec2, 2> verticesOffsets, std::array<glm::vec2, 2> uvCoords = {glm::vec2(0, 0), glm::vec2(1, 1)}, std::string texture = NO_IMAGE);
   void addButtonElement(const std::string &name, glm::vec3 position, std::string text, std::array<glm::vec2, 2> verticesOffsets, glm::vec3 color, glm::vec3 colorHovered, glm::vec3 colorPressed, std::string texture = NO_IMAGE, std::function<void(void)> callback = []() {});
 
   inline void moveCamera(const glm::vec3 &offset)
@@ -96,7 +108,9 @@ public:
   void enableCursor();
 
   void removeEntity(Entity entity);
+  void removeUIElement(const std::string &identifier);
   void loadMaterialAsset(std::string assetName, std::string texturePath = NO_IMAGE, std::string normalPath = NO_IMAGE, std::string heightPath = NO_IMAGE, std::string roughnessPath = NO_IMAGE, std::string metallicPath = NO_IMAGE, std::string aoPath = NO_IMAGE, std::string emissivePath = NO_IMAGE);
+  void updateTextObject(const std::string &identifier, std::string text);
   void createAnimatedModelFromFile(std::string baseName, std::string path, std::string texturesDir);
   void addEmptyMeshComponent(Entity entity);
   void addMeshComponent(Entity entity, MaterialData material, const std::string &texturePath, const std::vector<Vertex> &vertices, const std::vector<uint32_t> &indices);

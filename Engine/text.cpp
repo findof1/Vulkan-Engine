@@ -139,6 +139,7 @@ void Text::draw(Renderer *renderer, int currentFrame, glm::mat4 transformation, 
   MaterialData materialData;
   materialData.albedoColor = glm::vec3(1);
   materialData.hasAlbedoMap = 1;
+  materialData.isSkybox = 1; // makes it ignore lighting
 
   vkCmdPushConstants(commandBuffer, renderer->pipelineManager.pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MaterialData), &materialData);
 

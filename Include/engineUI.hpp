@@ -23,6 +23,7 @@ class Engine;
 class ENGINE_API EngineUI
 {
 public:
+  bool renderToViewport = false;
   VkDescriptorPool descriptorPool;
 
   VkImage offscreenImage;

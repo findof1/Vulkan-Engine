@@ -110,8 +110,7 @@ void main() {
 
     if (material.isSkybox == 1) {
         if (material.hasAlbedoMap == 1){
-            vec3 texColor = texture(albedoMap, fragTexCoord.xy).rgb;
-            outColor = vec4(texColor, 1.0); 
+            outColor = texture(albedoMap, fragTexCoord.xy); 
             return;
         }
         outColor = vec4(albedo, 1.0);
@@ -215,5 +214,9 @@ vec3 dirLightDir = normalize(vec3(-0.5, -1.0, -0.3));
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0/2.2));
 
+    if(material.opacity < 0.1 || (material.hasAlbedoMap == 1 && texture(albedoMap, fragTexCoord.xy).w < 0.1)){
+        discard;
+    }
+    
     outColor = vec4(color, material.opacity);
 }

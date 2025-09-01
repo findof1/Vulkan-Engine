@@ -48,24 +48,20 @@ void Engine::enableCursor()
 
 void Engine::init(std::string windowName, std::function<void(Engine *)> startFn, std::function<void(Engine *, float)> updateFn)
 {
-  std::cout << "SE1" << std::endl;
+  renderer.debugMode = &debugMode;
   start = std::move(startFn);
-  std::cout << "SE2" << std::endl;
   update = std::move(updateFn);
-  std::cout << "SE3" << std::endl;
 
   initWindow(windowName);
-  std::cout << "SE4" << std::endl;
   renderer.initVulkan();
-  std::cout << "SE5" << std::endl;
   particleEmitters.emplace_back(renderer, &nextRenderingId, 512, glm::vec3(-1000));
-  std::cout << "SE6" << std::endl;
   particleEmitters.at(0).hide = true;
-  std::cout << "SE7" << std::endl;
-  renderer.engineUI.initImGui(&renderer);
-  std::cout << "SE8" << std::endl;
+  if (debugMode != DebugMode::Inactive)
+  {
+    renderer.engineUI.renderToViewport = debugMode == DebugMode::Viewport ? true : false;
+    renderer.engineUI.initImGui(&renderer);
+  }
   physics.debugDrawer = new VulkanDebugDrawer(renderer, nextRenderingId, true);
-  std::cout << "SE9" << std::endl;
 }
 
 void Engine::run()
@@ -101,7 +97,7 @@ void Engine::run()
           pressed = true;
         }
 
-        btn->updateState(xpos, ypos, pressed, renderer.engineUI.sceneMin, renderer.engineUI.sceneMax, renderer.WIDTH, renderer.HEIGHT);
+        btn->updateState(xpos, ypos, pressed, debugMode == DebugMode::Viewport ? renderer.engineUI.sceneMin : ImVec2(0, -renderer.HEIGHT), debugMode == DebugMode::Viewport ? renderer.engineUI.sceneMax : ImVec2(renderer.WIDTH, 0), renderer.WIDTH, renderer.HEIGHT);
       }
     }
 
@@ -160,9 +156,9 @@ void Engine::addTextElement(const std::string &name, glm::vec3 position, std::st
   UIElements.emplace(name, std::make_unique<Text>(renderer, &nextRenderingId, text, position));
 }
 
-void Engine::addSquareElement(const std::string &name, glm::vec3 position, glm::vec3 color, std::array<glm::vec2, 2> verticesOffsets, std::string texture)
+void Engine::addSquareElement(const std::string &name, glm::vec3 position, glm::vec3 color, std::array<glm::vec2, 2> verticesOffsets, std::array<glm::vec2, 2> uvCoords, std::string texture)
 {
-  UIElements.emplace(name, std::make_unique<Square>(renderer, &nextRenderingId, position, verticesOffsets, color, texture));
+  UIElements.emplace(name, std::make_unique<Square>(renderer, &nextRenderingId, position, verticesOffsets, uvCoords, color, texture));
 }
 
 void Engine::addButtonElement(const std::string &name, glm::vec3 position, std::string text, std::array<glm::vec2, 2> verticesOffsets, glm::vec3 color, glm::vec3 colorHovered, glm::vec3 colorPressed, std::string texture, std::function<void(void)> callback)
@@ -203,29 +199,30 @@ void Engine::render()
 
   for (auto &[e, _] : registry.meshes)
   {
-    renderer.renderQueue.push_back(makeGameObjectCommand(registry, e, &renderer, renderer.getCurrentFrame(), view, proj));
+    renderer.renderQueue.push_back(makeGameObjectCommand(registry, e, &renderer, renderer.getCurrentFrame(), view, proj, debugMode));
   }
 
   for (auto &[e, _] : registry.animatedMeshes)
   {
-    renderer.renderQueue.push_back(makeAnimatedGameObjectCommand(registry, e, &renderer, renderer.getCurrentFrame(), view, proj));
+    renderer.renderQueue.push_back(makeAnimatedGameObjectCommand(registry, e, &renderer, renderer.getCurrentFrame(), view, proj, debugMode));
   }
 
   for (auto &[_, element] : UIElements)
   {
     glm::mat4 model = glm::translate(glm::mat4(1.0f), element->position);
-    renderer.renderQueue.push_back(makeUICommand(element.get(), &renderer, renderer.getCurrentFrame(), model, ortho));
+    renderer.renderQueue.push_back(makeUICommand(element.get(), &renderer, renderer.getCurrentFrame(), model, ortho, debugMode));
   }
 
   for (ParticleEmitter &emitter : particleEmitters)
   {
     if (!emitter.hide)
-      renderer.renderQueue.push_back(makeParticleCommand(&emitter, &renderer, renderer.getCurrentFrame(), view, proj));
+      renderer.renderQueue.push_back(makeParticleCommand(&emitter, &renderer, renderer.getCurrentFrame(), view, proj, debugMode));
   }
 
-  renderer.renderQueue.push_back(makeDebugCommand(physics.debugDrawer, &renderer, physics.debugDrawer->debugLines, view, proj, renderer.getCurrentFrame()));
+  renderer.renderQueue.push_back(makeDebugCommand(physics.debugDrawer, &renderer, physics.debugDrawer->debugLines, view, proj, renderer.getCurrentFrame(), debugMode));
 
-  renderer.engineUI.renderImGUI(this, &renderer);
+  if (debugMode != DebugMode::Inactive)
+    renderer.engineUI.renderImGUI(this, &renderer);
 
   renderer.drawFrame();
 }
@@ -360,6 +357,33 @@ void Engine::removeEntity(Entity entity)
     else
     {
       ++it;
+    }
+  }
+}
+
+void Engine::removeUIElement(const std::string &identifier)
+{
+  auto it = UIElements.find(identifier);
+  if (it != UIElements.end())
+  {
+    it->second.get()->cleanup(renderer.deviceManager.device, renderer);
+    UIElements.erase(it);
+  }
+}
+
+void Engine::updateTextObject(const std::string &identifier, std::string text)
+{
+  auto it = UIElements.find(identifier);
+  if (it != UIElements.end())
+  {
+    UI *base = it->second.get();
+    if (Text *textElement = dynamic_cast<Text *>(base))
+    {
+      textElement->updateText(text, renderer);
+    }
+    else
+    {
+      return;
     }
   }
 }

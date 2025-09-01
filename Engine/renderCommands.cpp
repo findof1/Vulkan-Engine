@@ -198,10 +198,10 @@ glm::mat4 getWorldTransform(ECSRegistry &registry, Entity e)
   return transformation;
 }
 
-RenderCommand makeGameObjectCommand(ECSRegistry &registry, Entity e, Renderer *renderer, int currentFrame, glm::mat4 view, glm::mat4 proj)
+RenderCommand makeGameObjectCommand(ECSRegistry &registry, Entity e, Renderer *renderer, int currentFrame, glm::mat4 view, glm::mat4 proj, DebugMode debugMode)
 {
   return {
-      [&registry, renderer, e, currentFrame, view, proj](VkCommandBuffer cmdBuf, RenderStage renderStage)
+      [&registry, renderer, e, currentFrame, view, proj, debugMode](VkCommandBuffer cmdBuf, RenderStage renderStage)
       {
         auto meshIt = registry.meshes.find(e);
         if (meshIt == registry.meshes.end() || meshIt->second.hide)
@@ -216,8 +216,8 @@ RenderCommand makeGameObjectCommand(ECSRegistry &registry, Entity e, Renderer *r
           enableDepthWrite(renderer, cmdBuf);
 
           VkExtent2D offscreenExtent;
-          offscreenExtent.width = renderer->engineUI.imageW;
-          offscreenExtent.height = renderer->engineUI.imageH;
+          offscreenExtent.width = debugMode == DebugMode::Viewport ? renderer->engineUI.imageW : renderer->swapchainManager.swapChainExtent.width;
+          offscreenExtent.height = debugMode == DebugMode::Viewport ? renderer->engineUI.imageH : renderer->swapchainManager.swapChainExtent.height;
           setupViewportScissor(cmdBuf, offscreenExtent);
         }
         else if (renderStage == ColorID)
@@ -246,10 +246,10 @@ RenderCommand makeGameObjectCommand(ECSRegistry &registry, Entity e, Renderer *r
       }};
 }
 
-RenderCommand makeAnimatedGameObjectCommand(ECSRegistry &registry, Entity e, Renderer *renderer, int currentFrame, glm::mat4 view, glm::mat4 proj)
+RenderCommand makeAnimatedGameObjectCommand(ECSRegistry &registry, Entity e, Renderer *renderer, int currentFrame, glm::mat4 view, glm::mat4 proj, DebugMode debugMode)
 {
   return {
-      [&registry, renderer, e, currentFrame, view, proj](VkCommandBuffer cmdBuf, RenderStage renderStage)
+      [&registry, renderer, e, currentFrame, view, proj, debugMode](VkCommandBuffer cmdBuf, RenderStage renderStage)
       {
         auto animMeshIt = registry.animatedMeshes.find(e);
         if (animMeshIt == registry.animatedMeshes.end() || animMeshIt->second.hide)
@@ -266,8 +266,8 @@ RenderCommand makeAnimatedGameObjectCommand(ECSRegistry &registry, Entity e, Ren
         enableDepthWrite(renderer, cmdBuf);
 
         VkExtent2D offscreenExtent;
-        offscreenExtent.width = renderer->engineUI.imageW;
-        offscreenExtent.height = renderer->engineUI.imageH;
+        offscreenExtent.width = debugMode == DebugMode::Viewport ? renderer->engineUI.imageW : renderer->swapchainManager.swapChainExtent.width;
+        offscreenExtent.height = debugMode == DebugMode::Viewport ? renderer->engineUI.imageH : renderer->swapchainManager.swapChainExtent.height;
         setupViewportScissor(cmdBuf, offscreenExtent);
 
         AnimatedMeshComponent &animMeshComp = registry.animatedMeshes.at(e);
@@ -340,7 +340,7 @@ RenderCommand makeAnimatedGameObjectCommand(ECSRegistry &registry, Entity e, Ren
       }};
 }
 
-RenderCommand makeUICommand(UI *ui, Renderer *renderer, int currentFrame, glm::mat4 model, glm::mat4 ortho)
+RenderCommand makeUICommand(UI *ui, Renderer *renderer, int currentFrame, glm::mat4 model, glm::mat4 ortho, DebugMode debugMode)
 {
   return {
       [=](VkCommandBuffer cmdBuf, RenderStage renderStage)
@@ -359,14 +359,14 @@ RenderCommand makeUICommand(UI *ui, Renderer *renderer, int currentFrame, glm::m
         glm::mat4 staticView = glm::lookAt(cameraPos, cameraTarget, cameraUp);
 
         VkExtent2D offscreenExtent;
-        offscreenExtent.width = renderer->engineUI.imageW;
-        offscreenExtent.height = renderer->engineUI.imageH;
+        offscreenExtent.width = debugMode == DebugMode::Viewport ? renderer->engineUI.imageW : renderer->swapchainManager.swapChainExtent.width;
+        offscreenExtent.height = debugMode == DebugMode::Viewport ? renderer->engineUI.imageH : renderer->swapchainManager.swapChainExtent.height;
         setupViewportScissor(cmdBuf, offscreenExtent);
         ui->draw(renderer, currentFrame, model, staticView, ortho, cmdBuf);
       }};
 }
 
-RenderCommand makeParticleCommand(ParticleEmitter *emitter, Renderer *renderer, int currentFrame, glm::mat4 view, glm::mat4 proj)
+RenderCommand makeParticleCommand(ParticleEmitter *emitter, Renderer *renderer, int currentFrame, glm::mat4 view, glm::mat4 proj, DebugMode debugMode)
 {
   return {
       [=](VkCommandBuffer cmdBuf, RenderStage renderStage)
@@ -384,7 +384,7 @@ RenderCommand makeParticleCommand(ParticleEmitter *emitter, Renderer *renderer, 
       }};
 }
 
-RenderCommand makeDebugCommand(VulkanDebugDrawer *drawer, Renderer *renderer, const std::vector<Vertex> &lines, glm::mat4 view, glm::mat4 proj, int currentFrame)
+RenderCommand makeDebugCommand(VulkanDebugDrawer *drawer, Renderer *renderer, const std::vector<Vertex> &lines, glm::mat4 view, glm::mat4 proj, int currentFrame, DebugMode debugMode)
 {
   return {
       [=](VkCommandBuffer cmdBuf, RenderStage renderStage)
@@ -401,8 +401,8 @@ RenderCommand makeDebugCommand(VulkanDebugDrawer *drawer, Renderer *renderer, co
           enableDepthWrite(renderer, cmdBuf);
 
           VkExtent2D offscreenExtent;
-          offscreenExtent.width = renderer->engineUI.imageW;
-          offscreenExtent.height = renderer->engineUI.imageH;
+          offscreenExtent.width = debugMode == DebugMode::Viewport ? renderer->engineUI.imageW : renderer->swapchainManager.swapChainExtent.width;
+          offscreenExtent.height = debugMode == DebugMode::Viewport ? renderer->engineUI.imageH : renderer->swapchainManager.swapChainExtent.height;
           setupViewportScissor(cmdBuf, offscreenExtent);
           drawer->drawDebugLines(cmdBuf, lines, view, proj, currentFrame);
         }

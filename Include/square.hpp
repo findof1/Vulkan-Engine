@@ -24,7 +24,7 @@ class ENGINE_API Square : public UI
 public:
   int hasTexture = 0;
 
-  Square(Renderer &renderer, int *nextRenderingId, glm::vec3 position, std::array<glm::vec2, 2> verticesOffsets, glm::vec3 color, std::string texture = "models/couch/diffuse.png");
+  Square(Renderer &renderer, int *nextRenderingId, glm::vec3 position, std::array<glm::vec2, 2> verticesOffsets, std::array<glm::vec2, 2> uvCoords, glm::vec3 color, std::string texture = "models/couch/diffuse.png");
 
   void initGraphics(Renderer &renderer) override;
   void initGraphics(Renderer &renderer, std::string texture);
@@ -34,6 +34,7 @@ public:
 private:
   void initVertices();
   std::array<glm::vec2, 2> verticesOffsets;
+  std::array<glm::vec2, 2> uvCoords;
   glm::vec3 color;
   std::vector<Vertex> vertices;
 };

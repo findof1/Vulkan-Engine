@@ -47,6 +47,16 @@ class GameObject;
 class ParticleEmitter;
 class UI;
 
+#ifndef DEBUG_MODE
+#define DEBUG_MODE
+enum DebugMode
+{
+  Viewport, // full debug tools along with viewport
+  Tools,    // full debug tools
+  Inactive, // no debug tools
+};
+#endif
+
 #ifndef RENDER_COMMAND
 #define RENDER_COMMAND
 
@@ -72,9 +82,10 @@ public:
 
   static const std::vector<const char *> deviceExtensions;
 
-  const bool enableValidationLayers = false;
+  const bool enableValidationLayers = true;
 
   GLFWwindow *window;
+  DebugMode *debugMode;
 
   void initVulkan();
 

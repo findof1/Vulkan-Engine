@@ -5,8 +5,8 @@
 #include "mesh.hpp"
 #include "noImage.hpp"
 
-Square::Square(Renderer &renderer, int *nextRenderingId, glm::vec3 position, std::array<glm::vec2, 2> verticesOffsets, glm::vec3 color, std::string texture)
-    : UI(renderer, nextRenderingId, position), verticesOffsets(verticesOffsets), color(color)
+Square::Square(Renderer &renderer, int *nextRenderingId, glm::vec3 position, std::array<glm::vec2, 2> verticesOffsets, std::array<glm::vec2, 2> uvCoords, glm::vec3 color, std::string texture)
+    : UI(renderer, nextRenderingId, position), verticesOffsets(verticesOffsets), uvCoords(uvCoords), color(color)
 {
   if (texture != NO_IMAGE)
   {
@@ -75,25 +75,25 @@ void Square::initVertices()
   v0.pos = glm::vec3(verticesOffsets[0].x, verticesOffsets[1].y, -0.1f);
   v0.color = glm::vec3(0);
   v0.normal = glm::vec3(-1.0f);
-  v0.texPos = glm::vec4(0, 0, 1, 1);
+  v0.texPos = glm::vec4(uvCoords[0].x, uvCoords[0].y, 1, 1);
 
   Vertex v1;
   v1.pos = glm::vec3(verticesOffsets[0].x, verticesOffsets[0].y, -0.1f);
   v1.color = glm::vec3(0);
   v1.normal = glm::vec3(-1.0f);
-  v1.texPos = glm::vec4(0, 1, 1, 1);
+  v1.texPos = glm::vec4(uvCoords[0].x, uvCoords[1].y, 1, 1);
 
   Vertex v2;
   v2.pos = glm::vec3(verticesOffsets[1].x, verticesOffsets[0].y, -0.1f);
   v2.color = glm::vec3(0);
   v2.normal = glm::vec3(-1.0f);
-  v2.texPos = glm::vec4(1, 1, 1, 1);
+  v2.texPos = glm::vec4(uvCoords[1].x, uvCoords[1].y, 1, 1);
 
   Vertex v3;
   v3.pos = glm::vec3(verticesOffsets[1].x, verticesOffsets[1].y, -0.1f);
   v3.color = glm::vec3(0);
   v3.normal = glm::vec3(-1.0f);
-  v3.texPos = glm::vec4(1, 0, 1, 1);
+  v3.texPos = glm::vec4(uvCoords[1].x, uvCoords[0].y, 1, 1);
 
   vertices.push_back(v0);
   vertices.push_back(v1);
