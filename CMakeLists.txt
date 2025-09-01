@@ -22,7 +22,7 @@ file(GLOB IMGUI_BACKENDS
 include_directories(
     C:/msys64/mingw64/include
     C:/msys64/mingw64/include/freetype2
-    C:/VulkanSDK/1.3.290.0/Include
+    C:/VulkanSDK/1.4.321.1/Include
     C:/msys64/mingw64/include/glm
     ${CMAKE_SOURCE_DIR}/External
     ${CMAKE_SOURCE_DIR}/Include
@@ -32,7 +32,7 @@ include_directories(
 
 )
 
-link_directories(C:/msys64/mingw64/lib C:/VulkanSDK/1.3.290.0/Lib)
+link_directories(C:/msys64/mingw64/lib C:/VulkanSDK/1.4.321.1/Lib)
 
 file(GLOB ENGINE_SRC "${CMAKE_SOURCE_DIR}/Engine/*.cpp")
 
